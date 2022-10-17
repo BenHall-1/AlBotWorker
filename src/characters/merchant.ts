@@ -1,11 +1,13 @@
 import AL, { Merchant } from 'alclient';
+import { sendPartyInvite } from '../utils/party.js';
 import { runDefault } from './characters.js';
 
 async function run(bot: Merchant) {
     await runDefault(bot);
     
     if (bot.ready){
-        buyPotions(bot);
+        await buyPotions(bot);
+        await sendPartyInvite(bot);
     }
 
     setTimeout(async () => {
