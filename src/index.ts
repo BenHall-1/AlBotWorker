@@ -10,9 +10,9 @@ async function run() {
     await AL.Pathfinder.prepare(AL.Game.G);
 
     // Merchant Bot
-    let merchantBot = await AL.Game.startMerchant("Iqium", "EU", "II");
-    console.log(`Logged in as ${merchantBot.name}!`);
-    await runMerchant(merchantBot);
+    // let merchantBot = await AL.Game.startMerchant("Iqium", "EU", "II");
+    // console.log(`Logged in as ${merchantBot.name}!`);
+    // await runMerchant(merchantBot);
 
     // Mage Bot
     let mageBot = await AL.Game.startMage("Elius", "EU", "II");
@@ -21,8 +21,8 @@ async function run() {
 
     // Update stats every 5 seconds
     setInterval(() => {
-        const gold = mageBot.gold + merchantBot.gold;
-        const xp = mageBot.xp + merchantBot.xp;
+        const gold = mageBot.gold;
+        const xp = mageBot.xp;
         updateStats(gold, xp);
     }, 5000);
 }
