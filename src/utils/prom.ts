@@ -2,9 +2,14 @@ import client from 'prom-client';
 import express from 'express';
 
 const register = new client.Registry();
-const goldCounter = new client.Gauge({
+const goldGauge = new client.Gauge({
     name: 'gold',
     help: 'Gold Collected',
+    registers: [register]
+});
+const mageXp = new client.Gauge({
+    name: 'mage_xp',
+    help: 'Mage XP',
     registers: [register]
 });
 
@@ -26,8 +31,12 @@ async function run() {
     } );
 }
 
-async function setGold(g: number) {
-    goldCounter.set(g);
+async function setGold(gold: number) {
+    goldGauge.set(gold);
 }
 
-export { run, setGold };
+async function setMageXp(xp: number) {
+    mageXp.set(xp);
+}
+
+export { run, setGold, setMageXp };
