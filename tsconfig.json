@@ -1,0 +1,17 @@
+{
+    "compilerOptions": {
+        "target": "es2020",
+        "module": "ESNext",
+        "moduleResolution": "node",
+        "outDir": "./out/",
+        "removeComments": true,
+        "esModuleInterop": true,
+        "strict": true, 
+        "paths": {
+            "@module": [
+              "./src/utils/regen"
+            ]
+          },
+    },
+    
+}
