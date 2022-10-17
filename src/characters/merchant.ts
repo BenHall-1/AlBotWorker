@@ -7,7 +7,7 @@ async function run(bot: Merchant) {
     
     if (bot.ready){
         await buyPotions(bot);
-        await sendPartyInvite(bot);
+        // await sendPartyInvite(bot);
     }
 
     setTimeout(async () => {

@@ -8,7 +8,7 @@ async function run(bot: Mage) {
     await runDefault(bot);
     
     if (bot.ready){
-        await acceptPartyInvite(bot);
+        // await acceptPartyInvite(bot);
 
         const target = bot.getEntity({ canWalkTo: true, type: targetMonster, withinRange: "attack"})
         await attack(bot, target);
