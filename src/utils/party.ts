@@ -1,29 +1,21 @@
 import { Character } from "alclient";
 
-const partyMembers = ["Elius"];
+const partyMembers = ["Elius", "Trornas", "Krudalf"];
 
-async function sendPartyInvite(bot: Character) {
+async function handleParty(owner: Character | undefined, bots: (Character | undefined)[]) {
     try {
-        for (const member of partyMembers) {
-            if (bot.partyData == null || !bot.partyData.list.includes(member)) {
-                console.log(`${bot.name} is not in a party, sending party invite to ${member}...`);
-                await bot.sendPartyInvite(member);
-            }
+        if (!owner) return;
+
+        for (const bot of bots) {
+            if (!bot) continue;
+            console.log(`${owner.name} is not in a party, sending party invite to ${bot.name}...`);
+            await owner.sendPartyInvite(bot.name);
+            await bot.acceptPartyInvite(owner.name);
+            console.log(`${bot.name} joined the party of ${bot.party ?? 'no one'}`);
         }
     } catch (e) {
         console.log(e);
     }
 }
 
-async function acceptPartyInvite(bot: Character) {
-    try {
-        if (bot.party === undefined) {
-            console.log(`${bot.name} is not in a party, accepting party invite...`);
-            await bot.acceptPartyInvite("Iqium");
-        }
-    } catch (e) {
-        console.log(e);
-    }
-}
-
-export { sendPartyInvite, acceptPartyInvite };
+export { handleParty };

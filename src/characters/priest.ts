@@ -1,10 +1,10 @@
-import {Mage, Merchant, MonsterName} from 'alclient';
+import {Merchant, MonsterName, Priest} from 'alclient';
 import { attack, runDefault } from './characters.js';
 import {sendMoney} from "../utils/money.js";
 
 const targetMonster: MonsterName = "goo";
 
-async function run(bot: Mage, merchant: Merchant | undefined) {
+async function run(bot: Priest, merchant: Merchant | undefined) {
     try {
         await runDefault(bot);
 

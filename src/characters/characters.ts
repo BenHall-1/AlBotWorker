@@ -1,4 +1,4 @@
-import { Character, Entity, Tools } from "alclient";
+import { Character, Entity, MonsterName, Tools } from "alclient";
 import {regen_hp, regen_mp} from '../utils/regen.js';
 
 async function runDefault(bot: Character) {
@@ -19,12 +19,17 @@ async function runDefault(bot: Character) {
 
 
 // Method for attacking
-async function attack(bot: Character, target: Entity) {
+async function attack(bot: Character, targetName: MonsterName) {
     try {
         if (bot.isOnCooldown("attack")) return;
+
+        let target = bot.getEntity({canWalkTo: true, type: targetName, withinRange: "attack"});
         if (!target) {
-            await bot.smartMove(target);
+            await bot.smartMove(targetName);
+            target = bot.getEntity({canWalkTo: true, type: targetName, withinRange: "attack"});
         }
+
+        if(!target) return;
 
         const attack = await bot.basicAttack(target.id);
         console.log(`${bot.name} Attacked ${target.name}_${target.id} for ${attack.damage} damage`);
