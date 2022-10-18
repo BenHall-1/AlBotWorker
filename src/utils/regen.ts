@@ -1,25 +1,30 @@
 import { Character } from "alclient";
 
 async function regen_mp(bot: Character) {
-    if (bot.rip) return;
+    try {
+        if (bot.rip) return;
 
-    const mpot = bot.locateItem("mpot0");
-    if (bot.mp < (bot.max_mp - bot.mp_cost)) {
-        if (!bot.isOnCooldown("regen_mp")){
-            await bot.regenMP();
+        const mpot = bot.locateItem("mpot0");
+        if (bot.mp < (bot.max_mp - bot.mp_cost)) {
+            if (!bot.isOnCooldown("regen_mp")) {
+                await bot.regenMP();
+            }
+            if (mpot && !bot.isOnCooldown("use_mp")) {
+                await bot.useMPPot(bot.locateItem("mpot0"))
+                console.log(`${bot.name} has taken a MP potion. has ${bot.countItem("mpot0")}`);
+            }
         }
-        if (mpot && !bot.isOnCooldown("use_mp")){
-            await bot.useMPPot(bot.locateItem("mpot0"))
-            console.log(`${bot.name} has taken a MP potion. has ${bot.countItem("mpot0")}`);
-        }
+    } catch (e) {
+        console.log(e);
     }
 }
 
 async function regen_hp(bot: Character) {
-    if (bot.rip) return;
+    try {
+        if (bot.rip) return;
+        if (bot.hp == bot.max_hp) return;
 
-    const hpot = bot.locateItem("hpot0");
-    if (bot.hp < bot.max_hp) {
+        const hpot = bot.locateItem("hpot0");
         if (!bot.isOnCooldown("regen_hp")){
             await bot.regenHP();
         }
@@ -27,6 +32,8 @@ async function regen_hp(bot: Character) {
             await bot.useHPPot(bot.locateItem("hpot0"))
             console.log(`${bot.name} has taken a HP potion. has ${bot.countItem("hpot0")}`);
         }
+    } catch (e) {
+        console.log(e);
     }
 }
 
