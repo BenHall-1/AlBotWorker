@@ -21,7 +21,7 @@ async function runDefault(bot: Character) {
 // Method for attacking
 async function attack(bot: Character, target: Entity) {
     try {
-        if (!bot.isOnCooldown("attack")) return;
+        if (bot.isOnCooldown("attack")) return;
         if (!target) {
             await bot.smartMove(target);
         }
