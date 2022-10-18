@@ -6,16 +6,19 @@ const register = new client.Registry();
 const levelGauge = new client.Gauge({
     name: 'level',
     help: 'Levels',
+    labelNames: ['character'],
     registers: [register]
 });
 const xpGauge = new client.Gauge({
     name: 'xp',
     help: 'Total XP for Character',
+    labelNames: ['character'],
     registers: [register]
 });
 const goldGauge = new client.Gauge({
     name: 'gold',
     help: 'Total Gold for Character',
+    labelNames: ['character'],
     registers: [register]
 });
 
