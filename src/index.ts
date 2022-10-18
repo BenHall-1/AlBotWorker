@@ -5,7 +5,8 @@ import { run as runPrometheus, setGold, setMageXp } from './utils/prom.js';
 
 const bots = [
     {name: "Iqium", type: "merchant", region: "EU", server: "II"},
-    {name: "Elius", type: "mage", region: "EU", server: "II"}
+    {name: "Elius", type: "mage", region: "EU", server: "II"},
+    {name: "Erhan", type: "mage", region: "EU", server: "II"}
 ];
 const botCharacters: Map<string, Character> = new Map([]);
 
