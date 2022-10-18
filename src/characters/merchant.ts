@@ -22,17 +22,17 @@ async function buyPotions(bot: Merchant) {
         }
     }
     if (bot.countItem("mpot0") < 400 ) {
-        const potCount = 1000 - bot.countItem("mpot0");
-        const potMoney = Math.min(potCount, bot.gold / AL.Game.G.items.mpot0.g);
-        if (potMoney > 0) { 
-            await bot.buy("mpot0", potMoney);
+        const potsCount = 1000 - bot.countItem("mpot0");
+        const potsToBuy = Math.min(potsCount, bot.gold / AL.Game.G.items.mpot0.g);
+        if (potsToBuy >= 1) {
+            await bot.buy("mpot0", potsToBuy);
         }
     }
     if (bot.countItem("hpot0") < 400 ) {
-        const potCount = 1000 - bot.countItem("hpot0");
-        const potMoney = Math.min(potCount, bot.gold / AL.Game.G.items.hpot0.g);
-        if (potMoney > 0) { 
-            await bot.buy("hpot0", potMoney);
+        const potsCount = 1000 - bot.countItem("hpot0");
+        const potsToBuy = Math.min(potsCount, bot.gold / AL.Game.G.items.hpot0.g);
+        if (potsToBuy >= 1) {
+            await bot.buy("hpot0", potsToBuy);
         }
     }
 }

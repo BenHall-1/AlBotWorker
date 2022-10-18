@@ -1,13 +1,15 @@
-import AL, { Mage, MonsterName } from 'alclient';
-import { acceptPartyInvite } from '../utils/party.js';
+import {Mage, Merchant, MonsterName} from 'alclient';
 import { attack, runDefault } from './characters.js';
+import {sendMoney} from "../utils/money.js";
 
 const targetMonster: MonsterName = "goo";
 
-async function run(bot: Mage) {
+async function run(bot: Mage, merchant: Merchant | undefined) {
     await runDefault(bot);
     
     if (bot.ready){
+        await sendMoney(bot, merchant);
+
         // await acceptPartyInvite(bot);
 
         const target = bot.getEntity({ canWalkTo: true, type: targetMonster, withinRange: "attack"})
@@ -15,7 +17,7 @@ async function run(bot: Mage) {
     }
 
     setTimeout(async () => {
-        await run(bot)
+        await run(bot, merchant)
     }, 1000);
 }
 
