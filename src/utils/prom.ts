@@ -1,15 +1,21 @@
 import client from 'prom-client';
 import express from 'express';
+import {Character} from "alclient";
 
 const register = new client.Registry();
-const goldGauge = new client.Gauge({
-    name: 'gold',
-    help: 'Gold Collected',
+const levelGauge = new client.Gauge({
+    name: 'level',
+    help: 'Levels',
     registers: [register]
 });
-const mageXp = new client.Gauge({
-    name: 'mage_xp',
-    help: 'Mage XP',
+const xpGauge = new client.Gauge({
+    name: 'xp',
+    help: 'Total XP for Character',
+    registers: [register]
+});
+const goldGauge = new client.Gauge({
+    name: 'gold',
+    help: 'Total Gold for Character',
     registers: [register]
 });
 
@@ -31,12 +37,11 @@ async function run() {
     } );
 }
 
-async function setGold(gold: number) {
-    goldGauge.set(gold);
+async function updateStats(bot: Character) {
+    levelGauge.set({character: bot.name}, bot.level);
+    xpGauge.set({character: bot.name}, bot.xp);
+    goldGauge.set({character: bot.name}, bot.gold);
 }
 
-async function setMageXp(xp: number) {
-    mageXp.set(xp);
-}
 
-export { run, setGold, setMageXp };
+export { run, updateStats };

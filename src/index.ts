@@ -1,7 +1,7 @@
-import AL, {Character, Mage, Merchant, ServerIdentifier, ServerRegion} from 'alclient';
+import AL, {Character, Merchant, ServerIdentifier, ServerRegion} from 'alclient';
 import { run as runMage } from './characters/mage.js';
 import {deployPotions, run as runMerchant} from './characters/merchant.js';
-import { run as runPrometheus, setGold, setMageXp } from './utils/prom.js';
+import { run as runPrometheus, updateStats } from './utils/prom.js';
 
 const bots = [
     {name: "Iqium", type: "merchant", region: "EU", server: "II"},
@@ -32,16 +32,8 @@ async function run() {
             }
         }
 
-        // Update stats every 5 seconds
-        setInterval(() => {
-            let gold = 0;
-            let xp = 0;
-            botCharacters.forEach((bot) => {
-                gold += bot.gold;
-                xp += bot.xp;
-            });
-            updateStats(gold, xp);
-        }, 5000);
+        // Update stats every 2 seconds
+        setInterval(() => botCharacters.forEach((bot) => updateStats(bot)), 2000);
 
         // Deploy Potions
         setInterval(() => {
@@ -54,11 +46,6 @@ async function run() {
     } catch (e) {
         console.log(e);
     }
-}
-
-async function updateStats(gold: number, xp: number) {
-    await setGold(gold);
-    await setMageXp(xp);
 }
 
 await run();

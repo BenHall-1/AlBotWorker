@@ -27,7 +27,7 @@ async function attack(bot: Character, target: Entity) {
         }
 
         const attack = await bot.basicAttack(target.id);
-        console.log(`Attacked ${target.name}_${target.id} for ${attack.damage} damage`);
+        console.log(`${bot.name} Attacked ${target.name}_${target.id} for ${attack.damage} damage`);
         await loot(bot);
     } catch (e) {
         console.log(e);
