@@ -3,49 +3,14 @@ import express from 'express';
 import {Character} from "alclient";
 
 const register = new client.Registry();
-const levelGauge = new client.Gauge({
-    name: 'level',
-    help: 'Levels',
-    labelNames: ['character', 'character_type'],
-    registers: [register]
-});
-const xpGauge = new client.Gauge({
-    name: 'xp',
-    help: 'Total XP for Character',
-    labelNames: ['character', 'character_type'],
-    registers: [register]
-});
-const goldGauge = new client.Gauge({
-    name: 'gold',
-    help: 'Total Gold for Character',
-    labelNames: ['character', 'character_type'],
-    registers: [register]
-});
-const healthGauge = new client.Gauge({
-    name: 'health',
-    help: 'Health for Character',
-    labelNames: ['character', 'character_type'],
-    registers: [register]
-});
-const maxHealthGauge = new client.Gauge({
-    name: 'max_health',
-    help: 'Max Health for Character',
-    labelNames: ['character', 'character_type'],
-    registers: [register]
-});
-const manaGauge = new client.Gauge({
-    name: 'mana',
-    help: 'Mana for Character',
-    labelNames: ['character', 'character_type'],
-    registers: [register]
-});
-const maxManaGauge = new client.Gauge({
-    name: 'max_mana',
-    help: 'Max Mana for Character',
-    labelNames: ['character', 'character_type'],
-    registers: [register]
-});
 
+const levelGauge = newGauge('level', 'The level of the character');
+const xpGauge = newGauge('xp', 'The xp of the character');
+const goldGauge = newGauge('gold', 'The gold of the character');
+const healthGauge = newGauge('health', 'The health of the character');
+const maxHealthGauge = newGauge('max_health', 'The max health of the character');
+const manaGauge = newGauge('mana', 'The mana of the character');
+const maxManaGauge = newGauge('max_mana', 'The max mana of the character');
 
 async function run() {
     register.setDefaultLabels({
@@ -75,5 +40,13 @@ async function updateStats(bot: Character) {
     maxManaGauge.labels(labels).set(bot.max_mp);
 }
 
+function newGauge(name: string, help: string): client.Gauge<"character" | "character_type"> {
+    return new client.Gauge({
+        name: name,
+        help: help,
+        labelNames: ['character', 'character_type'],
+        registers: [register]
+    });
+}
 
 export { run, updateStats };
