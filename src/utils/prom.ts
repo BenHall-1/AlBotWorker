@@ -33,6 +33,18 @@ const maxHealthGauge = new client.Gauge({
     labelNames: ['character', 'character_type'],
     registers: [register]
 });
+const manaGauge = new client.Gauge({
+    name: 'mana',
+    help: 'Mana for Character',
+    labelNames: ['character', 'character_type'],
+    registers: [register]
+});
+const maxManaGauge = new client.Gauge({
+    name: 'max_mana',
+    help: 'Max Mana for Character',
+    labelNames: ['character', 'character_type'],
+    registers: [register]
+});
 
 
 async function run() {
@@ -59,6 +71,8 @@ async function updateStats(bot: Character) {
     goldGauge.labels(labels).set(bot.gold);
     healthGauge.labels(labels).set(bot.hp);
     maxHealthGauge.labels(labels).set(bot.max_hp);
+    manaGauge.labels(labels).set(bot.mp);
+    maxManaGauge.labels(labels).set(bot.max_mp);
 }
 
 
