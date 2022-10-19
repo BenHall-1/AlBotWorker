@@ -17,6 +17,7 @@ export class MerchantBot extends BotCharacter {
 
   async buyHealthPotions(): Promise<void> {
     if (!this.bot) return;
+    if (!this.bot.ready) return;
     try {
       if (this.bot.countItem('hpot0') > 400) return;
       if (this.bot.smartMoving) return;
@@ -36,6 +37,7 @@ export class MerchantBot extends BotCharacter {
 
   async buyManaPotions(): Promise<void> {
     if (!this.bot) return;
+    if (!this.bot.ready) return;
     try {
       if (this.bot.countItem('mpot0') > 400) return;
       if (this.bot.smartMoving) return;
@@ -55,6 +57,7 @@ export class MerchantBot extends BotCharacter {
 
   async giveLuck(): Promise<void> {
     if (!this.bot) return;
+    if (!this.bot.ready) return;
     try {
       const targets = this.bot.getPlayers({ canWalkTo: true, withinRange: 'mluck', isNPC: false });
       targets.forEach(async (target) => {
@@ -87,6 +90,7 @@ export class MerchantBot extends BotCharacter {
 async function deployPotions(merchant: Character | undefined, bots: (Character | undefined)[]) {
   try {
     if (!merchant) return;
+    if (!merchant.ready) return;
 
     const mPotItemLocation = merchant.locateItem('mpot0');
     const hPotItemLocation = merchant.locateItem('hpot0');

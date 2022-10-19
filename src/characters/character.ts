@@ -76,6 +76,7 @@ export abstract class BotCharacter {
 
   async attack(): Promise<void> {
     if (!this.bot) return;
+    if (!this.bot.ready) return;
     try {
       if (!this.target) return;
       if (this.bot.isOnCooldown('attack')) return;
@@ -93,6 +94,7 @@ export abstract class BotCharacter {
 
   async regen_hp(): Promise<void> {
     if (!this.bot) return;
+    if (!this.bot.ready) return;
     try {
       if (this.bot.hp === this.bot.max_hp) return;
 
@@ -112,6 +114,7 @@ export abstract class BotCharacter {
 
   async regen_mp(): Promise<void> {
     if (!this.bot) return;
+    if (!this.bot.ready) return;
     try {
       if (this.bot.mp === this.bot.max_mp) return;
 
@@ -132,6 +135,7 @@ export abstract class BotCharacter {
 
   async loot(): Promise<void> {
     if (!this.bot) return;
+    if (!this.bot.ready) return;
     try {
       Array.from(this.bot.chests.values()).forEach(async (chest) => {
         if (Tools.distance(this.bot!, chest) > 800) {
