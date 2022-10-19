@@ -42,15 +42,6 @@ async function attack(bot: Character, targetName: MonsterName) {
 // Method for looting
 async function loot(bot: Character) {
     try {
-        for (const chest of bot.chests.values()) {
-            if(Tools.distance(bot, chest) > 800) {
-                if (!bot.smartMoving){
-                    await bot.smartMove(chest);
-                }
-            }
-
-            await bot.openChest(chest.id);
-        }
     } catch(e) {
         console.error(e);
     }

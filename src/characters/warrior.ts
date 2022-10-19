@@ -1,24 +1,13 @@
-import {Merchant, MonsterName, Warrior} from 'alclient';
-import { attack, runDefault } from './characters.js';
-import {sendMoney} from "../utils/money.js";
+import AL, {Character, MonsterName} from 'alclient';
+import {Bot, BotCharacter} from "./character";
 
-const targetMonster: MonsterName = "goo";
+export class WarriorBot extends BotCharacter {
+    constructor(bot: Bot, target: MonsterName | null) {
+        super(bot, target);
+    }
 
-async function run(bot: Warrior, merchant: Merchant | undefined) {
-    try {
-        await runDefault(bot);
-
-        if (bot.ready) {
-            await sendMoney(bot, merchant);
-            await attack(bot, targetMonster);
-        }
-
-        setTimeout(async () => {
-            await run(bot, merchant)
-        }, 1000);
-    } catch (e) {
-        console.log(e);
+    async startBot(): Promise<Character> {
+        const warrior = await AL.Game.startWarrior(this.botName, this.botRegion, this.botServer);
+        return this._startBot(warrior);
     }
 }
-
-export { run };
