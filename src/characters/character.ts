@@ -3,6 +3,7 @@ import {
 } from 'alclient';
 import { updateStats } from '../utils/prom.js';
 import logger from '../utils/logger.js';
+import { getBots } from '../managers/botManager.js';
 
 export interface Bot {
   name: string;
@@ -18,17 +19,14 @@ export abstract class BotCharacter {
 
   botServer: ServerIdentifier;
 
-  merchantBotName: string | null;
-
   bot: Character | null;
 
   target: MonsterName | null;
 
-  constructor(bot: Bot, merchantBotName: string | null, target: MonsterName | null) {
+  constructor(bot: Bot, target: MonsterName | null) {
     this.botName = bot.name;
     this.botRegion = bot.region;
     this.botServer = bot.server;
-    this.merchantBotName = merchantBotName;
 
     this.bot = null;
     this.target = target;
@@ -81,7 +79,7 @@ export abstract class BotCharacter {
       if (!this.target) return;
       if (this.bot.isOnCooldown('attack')) return;
 
-      let targetEntity = this.bot.getEntity({ canWalkTo: true, type: this.target, withinRange: 'attack' });
+      const targetEntity = this.bot.getEntity({ canWalkTo: true, type: this.target, withinRange: 'attack' });
 
       if (!targetEntity && !this.bot.smartMoving) {
         await this.bot.smartMove(this.target);
@@ -160,12 +158,21 @@ export abstract class BotCharacter {
 
   async sendMoney(): Promise<void> {
     if (!this.bot) return;
+    if (this.bot.ctype === 'merchant') return;
     try {
-      if (!this.merchantBotName) return;
+      const merchants = getBots({ include: ['merchant'] });
+      if (merchants.length === 0) return;
       if (this.bot.gold < 5000) return;
 
-      await this.bot.sendGold(this.merchantBotName, this.bot.gold);
-      logger.info(`${this.bot.name} has over 5,000 gold, depositing ${this.bot.gold} gold in ${this.merchantBotName}'s account`);
+      if (Tools.distance(merchants[0], this.bot) > 400) {
+        if (!merchants[0].smartMoving) {
+          await merchants[0].smartMove(this.bot);
+        }
+        return;
+      }
+
+      logger.info(`${this.bot.name} has over 5,000 gold, depositing ${this.bot.gold} gold in ${merchants[0].name}'s account`);
+      await this.bot.sendGold(merchants[0].name, this.bot.gold);
     } catch (e) {
       logger.error(e);
     }

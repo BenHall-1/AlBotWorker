@@ -6,7 +6,7 @@ import { BotCharacter, Bot } from './character.js';
 
 export class MerchantBot extends BotCharacter {
   constructor(bot: Bot) {
-    super(bot, null, null);
+    super(bot, null);
   }
 
   async startBot(): Promise<Character> {

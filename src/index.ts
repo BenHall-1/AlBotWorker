@@ -1,4 +1,4 @@
-import AL, { Character, MonsterName } from 'alclient';
+import AL, { MonsterName } from 'alclient';
 import MageBot from './characters/mage.js';
 import WarriorBot from './characters/warrior.js';
 import PriestBot from './characters/priest.js';
@@ -7,6 +7,7 @@ import { run as runPrometheus } from './utils/prom.js';
 import handleParty from './utils/party.js';
 import { Bot } from './characters/character.js';
 import logger from './utils/logger.js';
+import { addBot, getBots } from './managers/botManager.js';
 
 const bots: Bot[] = [
   {
@@ -22,7 +23,6 @@ const bots: Bot[] = [
     name: 'Krudalf', type: 'priest', region: 'EU', server: 'II',
   },
 ];
-const botCharacters: Map<string, Character> = new Map([]);
 const targetMonster: MonsterName = 'goo';
 
 async function run() {
@@ -32,28 +32,26 @@ async function run() {
     await Promise.all([AL.Game.loginJSONFile('./credentials.json'), AL.Game.getGData()]);
     await AL.Pathfinder.prepare(AL.Game.G);
 
-    const merchantBotName = bots.find((b) => b.type === 'merchant')?.name ?? null;
-
     bots.forEach(async (bot) => {
       switch (bot.type) {
         case 'merchant': {
           const merchant = await new MerchantBot(bot).startBot();
-          botCharacters.set(merchant.name, merchant);
+          addBot(merchant);
           break;
         }
         case 'mage': {
-          const mage = await new MageBot(bot, merchantBotName, targetMonster).startBot();
-          botCharacters.set(bot.name, mage);
+          const mage = await new MageBot(bot, targetMonster).startBot();
+          addBot(mage);
           break;
         }
         case 'warrior': {
-          const warrior = await new WarriorBot(bot, merchantBotName, targetMonster).startBot();
-          botCharacters.set(bot.name, warrior);
+          const warrior = await new WarriorBot(bot, targetMonster).startBot();
+          addBot(warrior);
           break;
         }
         case 'priest': {
-          const priest = await new PriestBot(bot, merchantBotName, targetMonster).startBot();
-          botCharacters.set(bot.name, priest);
+          const priest = await new PriestBot(bot, targetMonster).startBot();
+          addBot(priest);
           break;
         }
         default: {
@@ -62,14 +60,15 @@ async function run() {
         }
       }
     });
-    const merchants = bots.filter((b) => b.type === 'merchant').map((b) => botCharacters.get(b.name));
-    const nonMerchants = bots.filter((b) => b.type !== 'merchant').map((b) => botCharacters.get(b.name));
+
+    const merchants = getBots({ include: ['merchant'] });
+    const nonMerchants = getBots({ exclude: ['merchant'] });
 
     await handleParty(merchants[0], nonMerchants);
 
     // Deploy Potions
     setInterval(() => {
-      merchants.forEach((merchant) => {
+      getBots({ include: ['merchant'] }).forEach((merchant) => {
         deployPotions(merchant, nonMerchants);
       });
     }, 10000);

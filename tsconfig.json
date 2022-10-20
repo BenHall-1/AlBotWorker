@@ -7,11 +7,7 @@
         "removeComments": true,
         "esModuleInterop": true,
         "strict": true, 
-        "paths": {
-            "@module": [
-              "./src/utils/regen"
-            ]
-          },
+        "isolatedModules": true,
     },
     
 }
