@@ -11,7 +11,6 @@ export class MerchantBot extends BotCharacter {
 
   async startBot(): Promise<Character> {
     const merchant = await AL.Game.startMerchant(this.botName, this.botRegion, this.botServer);
-    this.startExtraLoops();
     return this.baseStartBot(merchant);
   }
 
@@ -73,7 +72,10 @@ export class MerchantBot extends BotCharacter {
     }
   }
 
-  async startExtraLoops(): Promise<void> {
+  async startLoops(): Promise<void> {
+    // Start Default Loops
+    await super.startLoops();
+
     // Buy Items Loop
     setInterval(async () => {
       await this.buyHealthPotions();

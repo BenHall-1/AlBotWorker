@@ -5,7 +5,9 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "build": "npx tsc --project ./tsconfig.json"
+    "build": "npx tsc --project ./tsconfig.json",
+    "start": "node out/index.js",
+    "lint": "npx eslint . --ext .ts,.tsx"
   },
   "repository": {
     "type": "git",
