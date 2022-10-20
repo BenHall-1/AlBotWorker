@@ -1,6 +1,7 @@
 import AL, {
   Character, Merchant, Tools,
 } from 'alclient';
+import { getBots } from '../managers/botManager.js';
 import logger from '../utils/logger.js';
 import { BotCharacter, Bot } from './character.js';
 
@@ -72,6 +73,30 @@ export class MerchantBot extends BotCharacter {
     }
   }
 
+  async collectAndSellItems(): Promise<void> {
+    if (!this.bot) return;
+    if (!this.bot.ready) return;
+    try {
+      getBots({ exclude: ['merchant'] }).forEach(async (char) => {
+        if (!this.bot) return;
+        if (Tools.distance(this.bot, char) > 400) {
+          if (!this.bot.smartMoving) {
+            await this.bot.smartMove(char);
+          }
+        }
+        let j = 0;
+        for (let i = 2; i < 42; i += 1) {
+          const item = this.bot.items[j];
+          if (!item) return;
+          char.sendItem(this.bot.id, i, item.q ?? 1).catch((e) => logger.error(e));
+          j += 1;
+        }
+      });
+    } catch (e) {
+      logger.error(e);
+    }
+  }
+
   async startLoops(): Promise<void> {
     // Start Default Loops
     await super.startLoops();
@@ -86,6 +111,11 @@ export class MerchantBot extends BotCharacter {
     setInterval(async () => {
       await this.giveLuck();
     }, 250);
+
+    // Collect and Sell Items Loop
+    setInterval(async () => {
+      await this.collectAndSellItems();
+    }, 60000);
   }
 }
 
