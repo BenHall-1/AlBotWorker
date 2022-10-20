@@ -9,7 +9,6 @@ async function run() {
   register.setDefaultLabels({
     app: 'adventureland-bot',
   });
-  client.collectDefaultMetrics({ register });
 
   const app = express();
 

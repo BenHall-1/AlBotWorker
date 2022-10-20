@@ -66,7 +66,7 @@ export abstract class BotCharacter {
     // Stats Loop
     setInterval(async () => {
       await this.updateStats();
-    });
+    }, 2000);
   }
 
   async heal(): Promise<void> {
@@ -81,12 +81,15 @@ export abstract class BotCharacter {
       if (!this.target) return;
       if (this.bot.isOnCooldown('attack')) return;
 
-      const target = this.bot.getEntity({ canWalkTo: true, type: this.target, withinRange: 'attack' });
+      let targetEntity = this.bot.getEntity({ canWalkTo: true, type: this.target, withinRange: 'attack' });
 
-      if (!target) return;
+      if (!targetEntity && !this.bot.smartMoving) {
+        await this.bot.smartMove(this.target);
+        return;
+      }
 
-      const attack = await this.bot.basicAttack(target.id);
-      logger.info(`${this.bot.name} Attacked ${target.name}_${target.id} for ${attack.damage} damage`);
+      const attack = await this.bot.basicAttack(targetEntity.id);
+      logger.info(`${this.bot.name} Attacked ${targetEntity.name}_${targetEntity.id} for ${attack.damage} damage`);
     } catch (e) {
       logger.error(e);
     }
@@ -94,6 +97,11 @@ export abstract class BotCharacter {
 
   async regen_hp(): Promise<void> {
     if (!this.bot) return;
+
+    if (this.bot.rip) {
+      await this.bot.respawn();
+    }
+
     if (!this.bot.ready) return;
     try {
       if (this.bot.hp === this.bot.max_hp) return;
