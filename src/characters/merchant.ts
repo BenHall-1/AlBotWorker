@@ -1,9 +1,11 @@
 import AL, {
-  Character, Merchant, Tools,
+  Character, ItemName, Merchant, Tools,
 } from 'alclient';
 import { getBots } from '../managers/botManager.js';
 import logger from '../utils/logger.js';
 import { BotCharacter, Bot } from './character.js';
+
+const itemsDontSend: ItemName[] = ['hpot0', 'mpot0'];
 
 export class MerchantBot extends BotCharacter {
   constructor(bot: Bot) {
@@ -76,22 +78,28 @@ export class MerchantBot extends BotCharacter {
   async collectAndSellItems(): Promise<void> {
     if (!this.bot) return;
     if (!this.bot.ready) return;
+    if (!this.bot.isFull) {
+      logger.warn(`${this.bot.name}'s inventory is full`);
+      return;
+    }
     try {
-      getBots({ exclude: ['merchant'] }).forEach(async (char) => {
+      const characters = getBots({ exclude: ['merchant'] });
+      for (const char of characters) {
         if (!this.bot) return;
         if (Tools.distance(this.bot, char) > 400) {
           if (!this.bot.smartMoving) {
-            await this.bot.smartMove(char);
+            this.bot.smartMove(char);
           }
         }
-        let j = 0;
-        for (let i = 2; i < 42; i += 1) {
-          const item = this.bot.items[j];
+
+        const items = char.items.filter((c) => c !== null && !itemsDontSend.includes(c.name));
+
+        for (const item of items) {
           if (!item) return;
-          char.sendItem(this.bot.id, i, item.q ?? 1).catch((e) => logger.error(e));
-          j += 1;
+          const invItem = char.locateItem(item.name);
+          char.sendItem(this.bot.id, invItem, item.q).then(() => logger.info(`${item.q}x ${item.name} sent to ${this.bot}`)).catch(() => {});
         }
-      });
+      }
     } catch (e) {
       logger.error(e);
     }
