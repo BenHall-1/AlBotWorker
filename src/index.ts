@@ -32,26 +32,30 @@ async function run() {
     await Promise.all([AL.Game.loginJSONFile('./credentials.json'), AL.Game.getGData()]);
     await AL.Pathfinder.prepare(AL.Game.G);
 
-    bots.forEach(async (bot) => {
+    for (const bot of bots) {
       switch (bot.type) {
         case 'merchant': {
-          const merchant = await new MerchantBot(bot).startBot();
-          addBot(merchant);
+          new MerchantBot(bot).startBot()
+            .then((char) => addBot(char))
+            .catch(() => {});
           break;
         }
         case 'mage': {
-          const mage = await new MageBot(bot, targetMonster).startBot();
-          addBot(mage);
+          new MageBot(bot, targetMonster).startBot()
+            .then((char) => addBot(char))
+            .catch(() => {});
           break;
         }
         case 'warrior': {
-          const warrior = await new WarriorBot(bot, targetMonster).startBot();
-          addBot(warrior);
+          new WarriorBot(bot, targetMonster).startBot()
+            .then((char) => addBot(char))
+            .catch(() => {});
           break;
         }
         case 'priest': {
-          const priest = await new PriestBot(bot, targetMonster).startBot();
-          addBot(priest);
+          new PriestBot(bot, targetMonster).startBot()
+            .then((char) => addBot(char))
+            .catch(() => {});
           break;
         }
         default: {
@@ -59,7 +63,7 @@ async function run() {
           break;
         }
       }
-    });
+    }
 
     const merchants = getBots({ include: ['merchant'] });
     const nonMerchants = getBots({ exclude: ['merchant'] });
@@ -68,10 +72,10 @@ async function run() {
 
     // Deploy Potions
     setInterval(() => {
-      getBots({ include: ['merchant'] }).forEach((merchant) => {
+      for (const merchant of getBots({ include: ['merchant'] })) {
         deployPotions(merchant, nonMerchants);
-      });
-    }, 10000);
+      }
+    }, 60000);
   } catch (e) {
     logger.error(e);
   }

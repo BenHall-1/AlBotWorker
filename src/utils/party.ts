@@ -8,13 +8,15 @@ export default async function handleParty(
   try {
     if (!owner) return;
 
-    bots.forEach(async (bot) => {
+    for (const bot of bots) {
       if (!bot) return;
       logger.info(`${owner.name} is not in a party, sending party invite to ${bot.name}...`);
-      await owner.sendPartyInvite(bot.name);
-      await bot.acceptPartyInvite(owner.name);
-      logger.info(`${bot.name} joined the party of ${bot.party ?? 'no one'}`);
-    });
+      owner.sendPartyInvite(bot.name)
+        .then(() => bot.acceptPartyInvite(owner.name)
+          .then(() => logger.info(`${bot.name} joined the party of ${bot.party ?? 'no one'}`))
+          .catch(() => {}))
+        .catch(() => {});
+    }
   } catch (e) {
     logger.error(e);
   }

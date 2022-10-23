@@ -5,15 +5,20 @@ import { getBots } from '../managers/botManager.js';
 import logger from '../utils/logger.js';
 import { BotCharacter, Bot } from './character.js';
 
+const itemsToKeep: ItemName[] = ['slimestaff', 'gslime', 'beewings', 'hpamulet', 'scroll0', 'seashell', 'ringsj', 'gem0', 'stand0', 'candy1', 'hpot0', 'mpot0'];
 const itemsDontSend: ItemName[] = ['hpot0', 'mpot0'];
 
 export class MerchantBot extends BotCharacter {
+  bot: Merchant | null;
+
   constructor(bot: Bot) {
     super(bot, null);
+    this.bot = null;
   }
 
   async startBot(): Promise<Character> {
     const merchant = await AL.Game.startMerchant(this.botName, this.botRegion, this.botServer);
+    this.bot = merchant;
     return this.baseStartBot(merchant);
   }
 
@@ -62,20 +67,19 @@ export class MerchantBot extends BotCharacter {
     if (!this.bot.ready) return;
     try {
       const targets = this.bot.getPlayers({ canWalkTo: true, withinRange: 'mluck', isNPC: false });
-      targets.forEach(async (target) => {
-        if (!target.s.mluck) return;
-        if (!this.bot!.isOnCooldown('mluck')) return;
-        if (!target.name) return;
+      for (const target of targets) {
+        if (target.s.mluck) continue;
+        if (!this.bot!.isOnCooldown('mluck')) continue;
+        if (!target.name) continue;
 
-        const bot: Merchant = this.bot as Merchant;
-        await bot.mluck(target.name);
-      });
+        this.bot.mluck(target.name).catch(() => {});
+      }
     } catch (e) {
       logger.error(e);
     }
   }
 
-  async collectAndSellItems(): Promise<void> {
+  async collectSellAndUpgrade(): Promise<void> {
     if (!this.bot) return;
     if (!this.bot.ready) return;
     if (!this.bot.isFull) {
@@ -92,14 +96,43 @@ export class MerchantBot extends BotCharacter {
           }
         }
 
+        char.sendGold(this.bot.id, char.gold)
+          .then((gold) => logger.info(`${char.name} sent ${gold} gold to ${this.bot?.name ?? 'unknown'}`))
+          .catch(() => {});
+
         const items = char.items.filter((c) => c !== null && !itemsDontSend.includes(c.name));
 
         for (const item of items) {
-          if (!item) return;
+          if (!item) continue;
           const invItem = char.locateItem(item.name);
-          char.sendItem(this.bot.id, invItem, item.q).then(() => logger.info(`${item.q}x ${item.name} sent to ${this.bot}`)).catch(() => {});
+          char.sendItem(this.bot.id, invItem, item.q)
+            .then(() => logger.info(`${item.q ?? 1}x ${item.name} sent to ${this.bot?.name ?? 'merchant'}`))
+            .catch(() => {});
         }
       }
+
+      for (const item of this.bot.items) {
+        if (!item) continue;
+        if (itemsToKeep.includes(item.name)) continue;
+        const itemLocation = this.bot.locateItem(item.name);
+
+        this.bot.sell(itemLocation, item.q)
+          .then(() => logger.info(`${item.q ?? 1}x ${item.name} sold by ${this.bot?.name ?? 'merchant'}`))
+          .catch(() => {});
+      }
+
+      if (!this.bot.smartMoving) {
+        await this.bot.smartMove('scrolls');
+      }
+
+      if (this.bot.gold < 1000000) return;
+
+      const scrollCount = this.bot.countItem('scroll0');
+      if (scrollCount < 20) {
+        await this.bot.buy('scroll0', 20 - scrollCount);
+      }
+
+      await this.processUpgrade('slimestaff');
     } catch (e) {
       logger.error(e);
     }
@@ -122,8 +155,58 @@ export class MerchantBot extends BotCharacter {
 
     // Collect and Sell Items Loop
     setInterval(async () => {
-      await this.collectAndSellItems();
+      await this.collectSellAndUpgrade();
     }, 60000);
+  }
+
+  async processUpgrade(item: ItemName, iteration: number = 1): Promise<void> {
+    setTimeout(async () => {
+      if (!this.bot) return;
+      if (this.busy || !this.bot.ready) {
+        await this.processUpgrade(item);
+        return;
+      }
+      if (!this.bot.smartMoving) {
+        await this.bot.smartMove('scrolls');
+      }
+      logger.warn('Processing Upgrades');
+      if (this.bot.locateItems(item).length > 3) {
+        const lowestItem = this.bot.locateItem(item, undefined, { returnLowestLevel: true });
+        let scrollPos = 0;
+
+        if (this.bot.items[lowestItem]?.level ?? 0 > 4) {
+          if (this.bot.countItem('scroll1') === 0) {
+            await this.bot.buy('scroll1', 1);
+          }
+          scrollPos = this.bot.locateItem('scroll1');
+        } else if (this.bot.countItem('scroll1') === 0) {
+          await this.bot.buy('scroll0', 1);
+          scrollPos = this.bot.locateItem('scroll0');
+        }
+
+        this.busy = true;
+        if (this.bot.countItem('scroll0') === 0) return;
+
+        this.bot.useMPPot(this.bot.locateItem('mpot0')).catch(() => {});
+        this.bot.massProduction().catch(() => {});
+
+        try {
+          const success = await this.bot.upgrade(lowestItem, scrollPos);
+
+          if (success) {
+            logger.info(`Upgraded ${item} to ${this.bot?.items[lowestItem]?.level ?? 'unknown'}`);
+          } else {
+            logger.info('Failed to upgrade item (lost the item)');
+          }
+        } catch (e) {
+          logger.error(e);
+          return;
+        }
+        this.busy = false;
+        if (iteration === 30) return;
+        await this.processUpgrade(item, iteration + 1);
+      }
+    }, 2000);
   }
 }
 
@@ -134,8 +217,8 @@ async function deployPotions(merchant: Character | undefined, bots: (Character |
 
     const mPotItemLocation = merchant.locateItem('mpot0');
     const hPotItemLocation = merchant.locateItem('hpot0');
-    bots.forEach(async (bot) => {
-      if (!bot) return;
+    for (const bot of bots) {
+      if (!bot) continue;
 
       let mPotToGive = 1000 - bot.countItem('mpot0');
       if (mPotToGive > 0) {
@@ -143,10 +226,11 @@ async function deployPotions(merchant: Character | undefined, bots: (Character |
           mPotToGive = merchant.countItem('mpot0');
         }
         if (Tools.distance(merchant, bot) > 200 && !merchant.smartMoving) {
-          await merchant.smartMove(bot);
+          merchant.smartMove(bot).catch(() => {});
         }
-        await merchant.sendItem(bot.name, mPotItemLocation, mPotToGive);
-        logger.info(`Gave ${mPotToGive}x mpot0 to ${bot.name}`);
+        merchant.sendItem(bot.name, mPotItemLocation, mPotToGive)
+          .then(() => logger.info(`Gave ${mPotToGive}x mpot0 to ${bot.name}`))
+          .catch(() => {});
       }
 
       let hPotToGive = 1000 - bot.countItem('hpot0');
@@ -155,12 +239,13 @@ async function deployPotions(merchant: Character | undefined, bots: (Character |
           hPotToGive = merchant.countItem('hpot0');
         }
         if (Tools.distance(merchant, bot) > 200 && !merchant.smartMoving) {
-          await merchant.smartMove(bot);
+          merchant.smartMove(bot).catch(() => {});
         }
-        await merchant.sendItem(bot.name, hPotItemLocation, hPotToGive);
-        logger.info(`Gave ${hPotToGive}x hpot0 to ${bot.name}`);
+        merchant.sendItem(bot.name, hPotItemLocation, hPotToGive)
+          .then(() => logger.info(`Gave ${hPotToGive}x hpot0 to ${bot.name}`))
+          .catch(() => {});
       }
-    });
+    }
   } catch (e) {
     logger.error(e);
   }

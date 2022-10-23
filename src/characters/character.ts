@@ -3,7 +3,6 @@ import {
 } from 'alclient';
 import { updateStats } from '../utils/prom.js';
 import logger from '../utils/logger.js';
-import { getBots } from '../managers/botManager.js';
 
 export interface Bot {
   name: string;
@@ -22,6 +21,8 @@ export abstract class BotCharacter {
   bot: Character | null;
 
   target: MonsterName | null;
+
+  busy: boolean = false;
 
   constructor(bot: Bot, target: MonsterName | null) {
     this.botName = bot.name;
@@ -56,11 +57,6 @@ export abstract class BotCharacter {
       await this.loot();
     }, 1000);
 
-    // Send Money Loop
-    setInterval(async () => {
-      await this.sendMoney();
-    }, 1000);
-
     // Stats Loop
     setInterval(async () => {
       await this.updateStats();
@@ -86,9 +82,14 @@ export abstract class BotCharacter {
         return;
       }
 
+      if (this.bot.mp < this.bot.mp_cost) {
+        await this.regen_mp();
+        return;
+      }
+
       const attack = await this.bot.basicAttack(targetEntity.id);
       logger.info(`${this.bot.name} Attacked ${targetEntity.name}_${targetEntity.id} for ${attack.damage} damage`);
-    } catch (e) {
+    } catch (e: any) {
       logger.error(e);
     }
   }
@@ -143,36 +144,14 @@ export abstract class BotCharacter {
     if (!this.bot) return;
     if (!this.bot.ready) return;
     try {
-      Array.from(this.bot.chests.values()).forEach(async (chest) => {
+      for (const chest of this.bot.chests.values()) {
         if (Tools.distance(this.bot!, chest) > 800) {
           if (!this.bot!.smartMoving) {
-            await this.bot!.smartMove(chest);
+            this.bot!.smartMove(chest).catch(() => {});
           }
         }
-        await this.bot!.openChest(chest.id);
-      });
-    } catch (e) {
-      logger.error(e);
-    }
-  }
-
-  async sendMoney(): Promise<void> {
-    if (!this.bot) return;
-    if (this.bot.ctype === 'merchant') return;
-    try {
-      const merchants = getBots({ include: ['merchant'] });
-      if (merchants.length === 0) return;
-      if (this.bot.gold < 5000) return;
-
-      if (Tools.distance(merchants[0], this.bot) > 400) {
-        if (!merchants[0].smartMoving) {
-          await merchants[0].smartMove(this.bot);
-        }
-        return;
+        this.bot!.openChest(chest.id).catch(() => {});
       }
-
-      logger.info(`${this.bot.name} has over 5,000 gold, depositing ${this.bot.gold} gold in ${merchants[0].name}'s account`);
-      await this.bot.sendGold(merchants[0].name, this.bot.gold);
     } catch (e) {
       logger.error(e);
     }
