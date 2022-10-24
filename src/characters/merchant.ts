@@ -162,6 +162,7 @@ export class MerchantBot extends BotCharacter {
   async processUpgrade(item: ItemName, iteration: number = 1): Promise<void> {
     setTimeout(async () => {
       if (!this.bot) return;
+      if (this.bot.gold < 500000) return;
       if (this.busy || !this.bot.ready) {
         await this.processUpgrade(item);
         return;
