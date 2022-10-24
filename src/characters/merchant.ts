@@ -5,7 +5,7 @@ import { getBots } from '../managers/botManager.js';
 import logger from '../utils/logger.js';
 import { BotCharacter, Bot } from './character.js';
 
-const itemsToKeep: ItemName[] = ['slimestaff', 'gslime', 'beewings', 'hpamulet', 'scroll0', 'seashell', 'ringsj', 'gem0', 'stand0', 'candy1', 'hpot0', 'mpot0'];
+const itemsToKeep: ItemName[] = ['slimestaff', 'gslime', 'beewings', 'scroll0', 'seashell', 'ringsj', 'gem0', 'stand0', 'candy1', 'hpot0', 'mpot0'];
 const itemsDontSend: ItemName[] = ['hpot0', 'mpot0'];
 
 export class MerchantBot extends BotCharacter {
@@ -36,7 +36,7 @@ export class MerchantBot extends BotCharacter {
 
       if (potsCanAfford < 1) return;
 
-      await this.bot.buy('hpot0', potsCanAfford);
+      this.bot.buy('hpot0', potsCanAfford).catch(() => {});
     } catch (e) {
       logger.error(e);
     }
@@ -56,7 +56,7 @@ export class MerchantBot extends BotCharacter {
 
       if (potsCanAfford < 1) return;
 
-      await this.bot.buy('mpot0', potsCanAfford);
+      this.bot.buy('mpot0', potsCanAfford).catch(() => {});
     } catch (e) {
       logger.error(e);
     }
@@ -125,11 +125,11 @@ export class MerchantBot extends BotCharacter {
         await this.bot.smartMove('scrolls');
       }
 
-      if (this.bot.gold < 1000000) return;
+      if (this.bot.gold < 500000) return;
 
       const scrollCount = this.bot.countItem('scroll0');
       if (scrollCount < 20) {
-        await this.bot.buy('scroll0', 20 - scrollCount);
+        this.bot.buy('scroll0', 20 - scrollCount).catch(() => {});
       }
 
       await this.processUpgrade('slimestaff');
@@ -169,44 +169,42 @@ export class MerchantBot extends BotCharacter {
       if (!this.bot.smartMoving) {
         await this.bot.smartMove('scrolls');
       }
-      logger.warn('Processing Upgrades');
-      if (this.bot.locateItems(item).length > 3) {
+      logger.warn(`Processing Upgrades (${iteration}/10)`);
+      if (this.bot.locateItems(item).length > 2) {
         const lowestItem = this.bot.locateItem(item, undefined, { returnLowestLevel: true });
-        let scrollPos = 0;
+        let scrollType: ItemName;
 
         if (this.bot.items[lowestItem]?.level ?? 0 > 4) {
-          if (this.bot.countItem('scroll1') === 0) {
-            await this.bot.buy('scroll1', 1);
-          }
-          scrollPos = this.bot.locateItem('scroll1');
-        } else if (this.bot.countItem('scroll1') === 0) {
-          await this.bot.buy('scroll0', 1);
-          scrollPos = this.bot.locateItem('scroll0');
+          scrollType = 'scroll1';
+        } else {
+          scrollType = 'scroll0';
         }
 
-        this.busy = true;
-        if (this.bot.countItem('scroll0') === 0) return;
+        if (this.bot.countItem(scrollType) === 0) {
+          this.bot.buy(scrollType, 1)
+            .then(() => this.processUpgrade(item, iteration + 1))
+            .catch(() => {});
+        }
 
-        this.bot.useMPPot(this.bot.locateItem('mpot0')).catch(() => {});
+        if (this.bot.countItem(scrollType) === 0) return;
+
+        const scrollPos = this.bot.locateItem(scrollType);
+
         this.bot.massProduction().catch(() => {});
-
-        try {
-          const success = await this.bot.upgrade(lowestItem, scrollPos);
-
-          if (success) {
+        this.bot.useMPPot(this.bot.locateItem('mpot0')).catch(() => {});
+        this.bot.upgrade(lowestItem, scrollPos).then((upgradeSuccessful) => {
+          if (upgradeSuccessful) {
             logger.info(`Upgraded ${item} to ${this.bot?.items[lowestItem]?.level ?? 'unknown'}`);
           } else {
-            logger.info('Failed to upgrade item (lost the item)');
+            logger.info('Upgrade Failed');
           }
-        } catch (e) {
-          logger.error(e);
-          return;
-        }
+        }).catch(() => {});
+
         this.busy = false;
-        if (iteration === 30) return;
+        if (iteration === 10) return;
         await this.processUpgrade(item, iteration + 1);
       }
-    }, 2000);
+    }, 5000);
   }
 }
 

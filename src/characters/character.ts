@@ -1,8 +1,9 @@
 import {
-  Character, CharacterType, MonsterName, ServerIdentifier, ServerRegion, Tools,
+  Character, CharacterType, Entity, MonsterName, ServerIdentifier, ServerRegion, Tools,
 } from 'alclient';
 import { updateStats } from '../utils/prom.js';
 import logger from '../utils/logger.js';
+import { getBots } from '../managers/botManager.js';
 
 export interface Bot {
   name: string;
@@ -75,12 +76,22 @@ export abstract class BotCharacter {
       if (!this.target) return;
       if (this.bot.isOnCooldown('attack')) return;
 
-      const targetEntity = this.bot.getEntity({ canWalkTo: true, type: this.target, withinRange: 'attack' });
+      let targetEntity: Entity;
 
-      if (!targetEntity && !this.bot.smartMoving) {
-        await this.bot.smartMove(this.target);
+      // if (this.bot.ctype !== 'warrior') {
+      //   targetEntity = getBots({ include: ['warrior'] })[0]?.getTargetEntity();
+      // } else {
+      targetEntity = this.bot.getEntity({ canWalkTo: true, type: this.target, withinRange: 'attack' });
+      // }
+
+      if (!targetEntity) {
+        if (!this.bot.smartMoving) {
+          await this.bot.smartMove(this.target);
+        }
         return;
       }
+
+      if (targetEntity === undefined) return;
 
       if (this.bot.mp < this.bot.mp_cost) {
         await this.regen_mp();
@@ -88,7 +99,7 @@ export abstract class BotCharacter {
       }
 
       const attack = await this.bot.basicAttack(targetEntity.id);
-      logger.info(`${this.bot.name} Attacked ${targetEntity.name}_${targetEntity.id} for ${attack.damage} damage`);
+      logger.debug(`${this.bot.name} Attacked ${targetEntity.name}_${targetEntity.id} for ${attack.damage} damage`);
     } catch (e: any) {
       logger.error(e);
     }
@@ -150,7 +161,7 @@ export abstract class BotCharacter {
             this.bot!.smartMove(chest).catch(() => {});
           }
         }
-        this.bot!.openChest(chest.id).catch(() => {});
+        this.bot?.openChest(chest.id).catch(() => {});
       }
     } catch (e) {
       logger.error(e);
