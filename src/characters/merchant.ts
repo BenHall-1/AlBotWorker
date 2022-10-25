@@ -125,7 +125,7 @@ export class MerchantBot extends BotCharacter {
         await this.bot.smartMove('scrolls');
       }
 
-      if (this.bot.gold < 500000) return;
+      if (this.bot.gold < 1000000) return;
 
       const scrollCount = this.bot.countItem('scroll0');
       if (scrollCount < 20) {
@@ -162,7 +162,7 @@ export class MerchantBot extends BotCharacter {
   async processUpgrade(item: ItemName, iteration: number = 1): Promise<void> {
     setTimeout(async () => {
       if (!this.bot) return;
-      if (this.bot.gold < 500000) return;
+      if (this.bot.gold < 1000000) return;
       if (this.busy || !this.bot.ready) {
         await this.processUpgrade(item);
         return;
