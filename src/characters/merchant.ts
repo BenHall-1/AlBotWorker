@@ -5,7 +5,7 @@ import { getBots } from '../managers/botManager.js';
 import logger from '../utils/logger.js';
 import { BotCharacter, Bot } from './character.js';
 
-const itemsToKeep: ItemName[] = ['slimestaff', 'gslime', 'beewings', 'scroll0', 'seashell', 'ringsj', 'gem0', 'stand0', 'candy1', 'hpot0', 'mpot0'];
+const itemsToKeep: ItemName[] = ['slimestaff', 'gslime', 'beewings', 'scroll0', 'scroll1', 'seashell', 'gem0', 'stand0', 'candy1', 'hpot0', 'mpot0'];
 const itemsDontSend: ItemName[] = ['hpot0', 'mpot0'];
 
 export class MerchantBot extends BotCharacter {
@@ -115,9 +115,10 @@ export class MerchantBot extends BotCharacter {
         if (!item) continue;
         if (itemsToKeep.includes(item.name)) continue;
         const itemLocation = this.bot.locateItem(item.name);
+        const { gold } = this.bot;
 
         this.bot.sell(itemLocation, item.q)
-          .then(() => logger.info(`${item.q ?? 1}x ${item.name} sold by ${this.bot?.name ?? 'merchant'}`))
+          .then((sold) => logger.info(`${item.q ?? 1}x ${item.name} was ${sold ? 'sold' : 'not sold'} by ${this.bot?.name ?? 'merchant'} for ${this.bot?.gold ?? 0 - gold}`))
           .catch(() => {});
       }
 
@@ -160,9 +161,10 @@ export class MerchantBot extends BotCharacter {
   }
 
   async processUpgrade(item: ItemName, iteration: number = 1): Promise<void> {
-    setTimeout(async () => {
+    try {
       if (!this.bot) return;
       if (this.bot.gold < 1000000) return;
+      if (iteration === 10) return;
       if (this.busy || !this.bot.ready) {
         await this.processUpgrade(item);
         return;
@@ -182,30 +184,32 @@ export class MerchantBot extends BotCharacter {
         }
 
         if (this.bot.countItem(scrollType) === 0) {
-          this.bot.buy(scrollType, 1)
-            .then(() => this.processUpgrade(item, iteration + 1))
-            .catch(() => {});
+          try {
+            await this.bot.buy(scrollType, 1);
+          } catch (e) {
+            logger.error(e);
+          }
         }
 
         if (this.bot.countItem(scrollType) === 0) return;
 
         const scrollPos = this.bot.locateItem(scrollType);
 
-        this.bot.massProduction().catch(() => {});
-        this.bot.useMPPot(this.bot.locateItem('mpot0')).catch(() => {});
-        this.bot.upgrade(lowestItem, scrollPos).then((upgradeSuccessful) => {
-          if (upgradeSuccessful) {
-            logger.info(`Upgraded ${item} to ${this.bot?.items[lowestItem]?.level ?? 'unknown'}`);
-          } else {
-            logger.info('Upgrade Failed');
-          }
-        }).catch(() => {});
+        await this.bot.massProduction();
+        await this.bot.useMPPot(this.bot.locateItem('mpot0'));
+        const upgradeSuccessful = await this.bot.upgrade(lowestItem, scrollPos);
+        if (upgradeSuccessful) {
+          logger.info(`Upgraded ${item} to ${this.bot?.items[lowestItem]?.level ?? 'unknown'}`);
+        } else {
+          logger.info(`Upgrade Failed (lost 1x ${item})`);
+        }
 
         this.busy = false;
-        if (iteration === 10) return;
         await this.processUpgrade(item, iteration + 1);
       }
-    }, 5000);
+    } catch (e) {
+      logger.error(e);
+    }
   }
 }
 

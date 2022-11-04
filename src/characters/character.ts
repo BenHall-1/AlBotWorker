@@ -25,6 +25,8 @@ export abstract class BotCharacter {
 
   busy: boolean = false;
 
+  loops: NodeJS.Timer[];
+
   constructor(bot: Bot, target: MonsterName | null) {
     this.botName = bot.name;
     this.botRegion = bot.region;
@@ -32,36 +34,54 @@ export abstract class BotCharacter {
 
     this.bot = null;
     this.target = target;
+    this.loops = [];
   }
 
   async baseStartBot(bot: Character): Promise<Character> {
     this.bot = bot;
+    logger.info(`${bot.ctype} logged in as '${bot.name}'`);
+    await this.clearLoops();
     await this.startLoops();
+    this.bot.socket.on('disconnect', (reason) => {
+      logger.warn(`${this.botName} disconnected due to '${reason}', reconnecting...`);
+      this.startBot();
+    });
     return bot;
   }
 
   abstract startBot(): Promise<Character>;
 
+  async clearLoops(): Promise<void> {
+    for (const loop of this.loops) {
+      clearInterval(loop);
+      this.loops.splice(this.loops.indexOf(loop), 1);
+    }
+  }
+
   async startLoops(): Promise<void> {
     // Attack Loop
-    setInterval(async () => {
+    const attackLoop = setInterval(async () => {
       await this.attack();
     }, 250);
+    this.loops.push(attackLoop);
 
     // Heal Loop
-    setInterval(async () => {
+    const healLoop = setInterval(async () => {
       await this.heal();
     }, 1000);
+    this.loops.push(healLoop);
 
     // Loot Loop
-    setInterval(async () => {
+    const lootLoop = setInterval(async () => {
       await this.loot();
     }, 1000);
+    this.loops.push(lootLoop);
 
     // Stats Loop
-    setInterval(async () => {
+    const statsLoop = setInterval(async () => {
       await this.updateStats();
     }, 2000);
+    this.loops.push(statsLoop);
   }
 
   async heal(): Promise<void> {
@@ -76,12 +96,12 @@ export abstract class BotCharacter {
       if (!this.target) return;
       if (this.bot.isOnCooldown('attack')) return;
 
-      let targetEntity: Entity;
+      // let targetEntity: Entity;
 
       // if (this.bot.ctype !== 'warrior') {
-      //   targetEntity = getBots({ include: ['warrior'] })[0]?.getTargetEntity();
+      // targetEntity = getBots({ include: ['warrior'] })[0]?.getTargetEntity();
       // } else {
-      targetEntity = this.bot.getEntity({ canWalkTo: true, type: this.target, withinRange: 'attack' });
+      const targetEntity = this.bot.getEntity({ canWalkTo: true, type: this.target, withinRange: 'attack' });
       // }
 
       if (!targetEntity) {
