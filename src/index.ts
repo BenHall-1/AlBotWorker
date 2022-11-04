@@ -7,7 +7,7 @@ import { run as runPrometheus } from './utils/prom.js';
 import handleParty from './utils/party.js';
 import { Bot } from './characters/character.js';
 import logger from './utils/logger.js';
-import { addBot, getBots } from './managers/botManager.js';
+import { addBot, getBotByType, getBots } from './managers/botManager.js';
 
 const bots: Bot[] = [
   {
@@ -65,16 +65,14 @@ async function run() {
       }
     }
 
-    const merchants = getBots({ include: ['merchant'] });
+    const merchant = getBotByType('merchant');
     const nonMerchants = getBots({ exclude: ['merchant'] });
 
-    await handleParty(merchants[0], nonMerchants);
+    await handleParty(merchant, nonMerchants);
 
     // Deploy Potions
     setInterval(() => {
-      for (const merchant of getBots({ include: ['merchant'] })) {
-        deployPotions(merchant, nonMerchants);
-      }
+      deployPotions(merchant, nonMerchants);
     }, 60000);
   } catch (e) {
     logger.error(e);

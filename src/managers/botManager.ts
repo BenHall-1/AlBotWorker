@@ -27,8 +27,12 @@ export function getBots(filter: BotFilter | null = null) {
   });
 }
 
+export function getBotByType(type: CharacterType): Character {
+  return getBots({ include: [type] })[0];
+}
+
 export function getBotsByType(type: CharacterType): Character[] {
-  return Array.from(bots.values()).filter((b) => b.ctype === type);
+  return getBots({ include: [type] });
 }
 
 export function removeBot(botName: string): void {
