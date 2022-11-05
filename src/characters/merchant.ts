@@ -200,7 +200,6 @@ export class MerchantBot extends BotCharacter {
 
   async processUpgrade(
     item: ItemName,
-    scrollName: ItemName | null = null,
     iteration: number = 1,
   ): Promise<void> {
     try {
@@ -218,36 +217,23 @@ export class MerchantBot extends BotCharacter {
       if (this.bot.locateItems(item).length > 2) {
         const lowestItem = this.bot.locateItem(item, undefined, { returnLowestLevel: true });
         const scrollType: ItemName = this.bot.items[lowestItem]?.level ?? 0 > 4 ? 'scroll1' : 'scroll0';
-        if (scrollName === null) {
-          this.processUpgrade(item, scrollType, iteration);
-          return;
-        }
 
-        if (this.bot.countItem(scrollType) === 0) {
-          try {
-            this.bot.buy(scrollType, 1).then(() => {
-              this.processUpgrade(item, scrollType, iteration);
-            });
-          } catch (e) {
-            logger.error(e);
-          }
-        }
+        this.bot.buy(scrollType, 1).then(() => {
+          if (!this.bot) return;
+          const scrollPos = this.bot.locateItem(scrollType);
 
-        if (this.bot.countItem(scrollType) === 0) return;
+          this.bot.massProduction().catch(() => {});
+          this.bot.useMPPot(this.bot.locateItem('mpot0')).catch(() => {});
+          this.bot.upgrade(lowestItem, scrollPos).then((upgradeSuccessful) => {
+            if (upgradeSuccessful) {
+              logger.info(`Upgraded ${item} to ${this.bot?.items[lowestItem]?.level ?? 'unknown'}`);
+            } else {
+              logger.info(`Upgrade Failed (lost 1x ${item})`);
+            }
 
-        const scrollPos = this.bot.locateItem(scrollType);
-
-        this.bot.massProduction();
-        this.bot.useMPPot(this.bot.locateItem('mpot0'));
-        const upgradeSuccessful = await this.bot.upgrade(lowestItem, scrollPos);
-        if (upgradeSuccessful) {
-          logger.info(`Upgraded ${item} to ${this.bot?.items[lowestItem]?.level ?? 'unknown'}`);
-        } else {
-          logger.info(`Upgrade Failed (lost 1x ${item})`);
-        }
-
-        this.busy = false;
-        await this.processUpgrade(item, null, iteration + 1);
+            this.processUpgrade(item, iteration + 1);
+          });
+        }).catch(() => {});
       }
     } catch (e) {
       logger.error(e);
