@@ -213,11 +213,14 @@ export class MerchantBot extends BotCharacter {
       if (!this.bot.smartMoving) {
         await this.bot.smartMove('scrolls');
       }
-      logger.warn(`Processing Upgrades (${iteration}/10)`);
       if (this.bot.locateItems(item).length > 2) {
         const lowestItem = this.bot.locateItem(item, undefined, { returnLowestLevel: true });
         const scrollType: ItemName = this.bot.items[lowestItem]?.level ?? 0 > 4 ? 'scroll1' : 'scroll0';
 
+        if (!this.bot.canBuy(scrollType)) return;
+        logger.warn(`Processing Upgrades (${iteration}/10)`);
+
+        logger.debug(`Buying 1x ${scrollType}`);
         this.bot.buy(scrollType, 1).then(() => {
           if (!this.bot) return;
           const scrollPos = this.bot.locateItem(scrollType);
@@ -233,7 +236,7 @@ export class MerchantBot extends BotCharacter {
 
             this.processUpgrade(item, iteration + 1);
           });
-        }).catch(() => {});
+        }).catch((e) => logger.error(`Failed to buy 1x ${scrollType}: ${e}`));
       }
     } catch (e) {
       logger.error(e);
