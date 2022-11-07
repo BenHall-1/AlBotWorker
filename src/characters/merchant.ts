@@ -2,7 +2,7 @@ import AL, {
   Character, ItemName, Merchant, Tools,
 } from 'alclient';
 import { getBots } from '../managers/botManager.js';
-import { AddUpgrade } from '../managers/dbManager.js';
+import * as db from '../managers/dbManager.js';
 import logger from '../utils/logger.js';
 import { BotCharacter, Bot } from './character.js';
 
@@ -161,8 +161,14 @@ export class MerchantBot extends BotCharacter {
       if (!item) continue;
 
       const invItem = this.bot.locateItem(item.name);
+      const { gold } = this.bot;
       this.bot.sell(invItem, item.q)
-        .then((sold) => logger.info(`${item.q ?? 1}x ${item.name} was ${sold ? 'sold' : 'not sold'} by ${this.bot?.name ?? 'merchant'}`))
+        .then((sold) => {
+          logger.info(`${item.q ?? 1}x ${item.name} was ${sold ? 'sold' : 'not sold'} by ${this.bot?.name ?? 'merchant'} for ${gold - (this.bot?.gold ?? 0)} gold`);
+          if (sold) {
+            db.LogItemSale(item.name, gold - (this.bot?.gold ?? 0));
+          }
+        })
         .catch(() => {});
     }
   }
@@ -179,7 +185,7 @@ export class MerchantBot extends BotCharacter {
         await this.bot.smartMove('scrolls');
       }
 
-      if (this.bot.gold < 1000000) return;
+      if (this.bot.gold < 2000000) return;
 
       await this.processUpgrade('slimestaff');
     } catch (e) {
@@ -257,10 +263,10 @@ export class MerchantBot extends BotCharacter {
           this.bot.upgrade(lowestItem, scrollPos).then(async (upgradeSuccessful) => {
             if (upgradeSuccessful) {
               logger.info(`Upgraded ${item} to ${this.bot?.items[lowestItem]?.level ?? 'unknown'}`);
-              await AddUpgrade(item, previousLevel, this.bot?.items[lowestItem]?.level ?? 1, true);
+              db.LogItemUpgrade(item, previousLevel, this.bot?.items[lowestItem]?.level ?? 1, true);
             } else {
               logger.info(`Upgrade Failed (lost 1x ${item})`);
-              await AddUpgrade(item, previousLevel);
+              db.LogItemUpgrade(item, previousLevel);
             }
 
             this.processUpgrade(item, iteration + 1);

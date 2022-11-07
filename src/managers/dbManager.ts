@@ -3,30 +3,37 @@ import { ItemName } from 'alclient';
 
 const prisma = new PrismaClient();
 
-type UpgradeItem = {
+type ItemUpgrade = {
   item_name: string;
   previous_level: number;
   new_level: number;
   successful: boolean;
-  date: Date | null;
+  date: Date;
 };
 
-type AttackItem = {
+type MonsterAttack = {
   entity: string;
   damage: number;
-  date: Date | null;
+  date: Date;
 };
 
-const batchUpgradeEntries: UpgradeItem[] = [];
-const batchAttackEntries: AttackItem[] = [];
+type SoldItem = {
+  item: string;
+  gold: number;
+  date: Date;
+};
 
-export function AddUpgrade(
+const batchItemUpgradeEntries: ItemUpgrade[] = [];
+const batchMonsterAttackEntries: MonsterAttack[] = [];
+const batchSoldItemEntries: SoldItem[] = [];
+
+export function LogItemUpgrade(
   item: ItemName,
   previousLevel: number,
   newLevel: number = -1,
   successful: boolean = false,
 ): void {
-  batchUpgradeEntries.push({
+  batchItemUpgradeEntries.push({
     item_name: item,
     previous_level: previousLevel,
     new_level: newLevel,
@@ -35,29 +42,48 @@ export function AddUpgrade(
   });
 }
 
-export function AddAttack(
+export function LogMonsterAttack(
   entity: string,
   damage: number,
 ) {
-  batchAttackEntries.push({
+  batchMonsterAttackEntries.push({
     entity,
     damage,
     date: new Date(),
   });
 }
 
+export function LogItemSale(
+  item: ItemName,
+  gold: number,
+) {
+  batchSoldItemEntries.push({
+    item,
+    gold,
+    date: new Date(),
+  });
+}
+
 export async function batchCreate(): Promise<void> {
-  if (batchUpgradeEntries.length > 0) {
-    await prisma.upgrade.createMany({
-      data: batchUpgradeEntries,
+  await prisma.$connect();
+  if (batchItemUpgradeEntries.length > 0) {
+    await prisma.itemUpgrades.createMany({
+      data: batchItemUpgradeEntries,
     });
+    batchItemUpgradeEntries.splice(0, batchItemUpgradeEntries.length);
   }
-  if (batchAttackEntries.length > 0) {
-    await prisma.attack.createMany({
-      data: batchAttackEntries,
+  if (batchMonsterAttackEntries.length > 0) {
+    await prisma.monsterAttacks.createMany({
+      data: batchMonsterAttackEntries,
     });
+
+    batchMonsterAttackEntries.splice(0, batchMonsterAttackEntries.length);
   }
-  batchUpgradeEntries.splice(0, batchUpgradeEntries.length);
-  batchAttackEntries.splice(0, batchAttackEntries.length);
+  if (batchSoldItemEntries.length > 0) {
+    await prisma.soldItems.createMany({
+      data: batchSoldItemEntries,
+    });
+    batchSoldItemEntries.splice(0, batchSoldItemEntries.length);
+  }
   await prisma.$disconnect();
 }
