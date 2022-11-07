@@ -83,16 +83,31 @@ export class MerchantBot extends BotCharacter {
     if (!this.bot) return;
     if (!this.bot.ready) return;
     const characters = getBots({ exclude: ['merchant'] });
+    logger.info(`Starting gold collection for ${this.bot.name}`);
+
+    if (Tools.distance(this.bot, characters[0]) > 400) {
+      if (!this.bot.smartMoving) {
+        await this.bot.smartMove(characters[0]);
+      }
+    }
+
+    let goldCollected = 0;
+
+    const updateGold = (gold: number) => {
+      goldCollected += gold;
+    };
 
     for (const char of characters) {
-      if (Tools.distance(this.bot, char) > 400) {
-        if (!this.bot.smartMoving) {
-          this.bot.smartMove(char);
-        }
-      }
-      char.sendGold(this.bot.id, char.gold)
-        .then((gold) => logger.info(`${char.name} sent ${gold} gold to ${this.bot?.name ?? 'unknown'}`))
+      char.sendGold(this.bot!.id, char.gold)
+        .then((gold) => {
+          logger.info(`${char.name} sent ${gold} gold to ${this.bot?.name ?? 'unknown'}`);
+          updateGold(gold);
+        })
         .catch(() => {});
+    }
+
+    if (goldCollected > 0) {
+      logger.info(`${this.bot.name} collected ${goldCollected} gold`);
     }
   }
 
@@ -101,23 +116,38 @@ export class MerchantBot extends BotCharacter {
     if (!this.bot.ready) return;
     if (this.bot.isFull()) return;
     const characters = getBots({ exclude: ['merchant'] });
-    for (const char of characters) {
-      if (Tools.distance(this.bot, char) > 400) {
-        if (!this.bot.smartMoving) {
-          this.bot.smartMove(char);
-        }
-      }
+    logger.info(`Starting item collection for ${this.bot.name}`);
 
+    if (Tools.distance(this.bot, characters[0]) > 400) {
+      if (!this.bot.smartMoving) {
+        await this.bot.smartMove(characters[0]);
+      }
+    }
+
+    let itemsCollected = 0;
+
+    const updateItems = (items: number) => {
+      itemsCollected += items;
+    };
+
+    for (const char of characters) {
       const items = char.items.filter((c) => c !== null && !itemsDontSend.includes(c.name));
 
       for (const item of items) {
         if (!item) continue;
 
         const invItem = char.locateItem(item.name);
+
+        updateItems(item.q ?? 1);
+
         char.sendItem(this.bot.id, invItem, item.q)
           .then(() => logger.info(`${item.q ?? 1}x ${item.name} sent to ${this.bot?.name ?? 'merchant'}`))
           .catch(() => {});
       }
+    }
+
+    if (itemsCollected > 0) {
+      logger.info(`${this.bot.name} collected ${itemsCollected} items`);
     }
   }
 
@@ -139,7 +169,7 @@ export class MerchantBot extends BotCharacter {
   async upgrade(): Promise<void> {
     if (!this.bot) return;
     if (!this.bot.ready) return;
-    if (!this.bot.isFull) {
+    if (this.bot.isFull()) {
       logger.warn(`${this.bot.name}'s inventory is full`);
       return;
     }
@@ -151,6 +181,19 @@ export class MerchantBot extends BotCharacter {
       if (this.bot.gold < 1000000) return;
 
       await this.processUpgrade('slimestaff');
+    } catch (e) {
+      logger.error(e);
+    }
+  }
+
+  async performHousekeeping(): Promise<void> {
+    if (!this.bot) return;
+    if (!this.bot.ready) return;
+    try {
+      await this.collectGold();
+      await this.collectItems();
+      await this.sellItems();
+      await this.upgrade();
     } catch (e) {
       logger.error(e);
     }
@@ -173,29 +216,11 @@ export class MerchantBot extends BotCharacter {
     }, 250);
     this.loops.push(luckLoop);
 
-    // Collect Gold Loop
-    const goldLoop = setInterval(async () => {
-      await this.collectGold();
+    // Housekeeping Loop
+    const housekeepingLoop = setInterval(async () => {
+      await this.performHousekeeping();
     }, 120000);
-    this.loops.push(goldLoop);
-
-    // Collect Items Loop
-    const itemsCollectLoop = setInterval(async () => {
-      await this.collectItems();
-    }, 120000);
-    this.loops.push(itemsCollectLoop);
-
-    // Sell Items Loop
-    const itemsSellLoop = setInterval(async () => {
-      await this.sellItems();
-    }, 120000);
-    this.loops.push(itemsSellLoop);
-
-    // Upgrade Loop
-    const upgradeLoop = setInterval(async () => {
-      await this.upgrade();
-    }, 60000);
-    this.loops.push(upgradeLoop);
+    this.loops.push(housekeepingLoop);
   }
 
   async processUpgrade(
