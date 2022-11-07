@@ -22,6 +22,8 @@ COPY package*.json ./
 
 RUN npm ci --production
 
+RUN npm run schema:generate
+
 COPY --from=builder /usr/src/app/out ./out
 
 EXPOSE 3000
