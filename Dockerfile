@@ -24,6 +24,7 @@ RUN npm ci --production
 
 RUN npm run schema:generate
 
+COPY prisma prisma/
 COPY --from=builder /usr/src/app/out ./out
 
 EXPOSE 3000
