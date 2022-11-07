@@ -1,6 +1,6 @@
+import AL, { Character } from 'alclient';
 import client from 'prom-client';
 import express from 'express';
-import { Character } from 'alclient';
 import logger from './logger.js';
 
 const register = new client.Registry();
@@ -32,6 +32,7 @@ function newGauge(name: string, help: string): client.Gauge<'character' | 'chara
 
 const levelGauge = newGauge('level', 'The level of the character');
 const xpGauge = newGauge('xp', 'The xp of the character');
+const xpNeededGauge = newGauge('xp_needed', 'The xp needed for the character to level up');
 const goldGauge = newGauge('gold', 'The gold of the character');
 const healthGauge = newGauge('health', 'The health of the character');
 const maxHealthGauge = newGauge('max_health', 'The max health of the character');
@@ -42,6 +43,7 @@ async function updateStats(bot: Character) {
   const labels = { character: bot.name, character_type: bot.ctype };
   levelGauge.labels(labels).set(bot.level);
   xpGauge.labels(labels).set(bot.xp);
+  xpNeededGauge.labels(labels).set((AL.Game.G.levels[bot.level + 1] ?? 0) - bot.xp);
   goldGauge.labels(labels).set(bot.gold);
   healthGauge.labels(labels).set(bot.hp);
   maxHealthGauge.labels(labels).set(bot.max_hp);
