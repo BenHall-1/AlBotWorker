@@ -31,6 +31,7 @@ function newGauge(name: string, help: string): client.Gauge<'character' | 'chara
 }
 
 const levelGauge = newGauge('level', 'The level of the character');
+const levelXpGauge = newGauge('level_xp', 'The xp needed in total for the next level for the character');
 const xpGauge = newGauge('xp', 'The xp of the character');
 const xpNeededGauge = newGauge('xp_needed', 'The xp needed for the character to level up');
 const maxDamageGauge = newGauge('max_damage', 'The maximum damage the character can do');
@@ -43,6 +44,7 @@ const maxManaGauge = newGauge('max_mana', 'The max mana of the character');
 async function updateStats(bot: Character) {
   const labels = { character: bot.name, character_type: bot.ctype };
   levelGauge.labels(labels).set(bot.level);
+  levelXpGauge.labels(labels).set(AL.Game.G.levels[bot.level + 1] ?? 0);
   xpGauge.labels(labels).set(bot.xp);
   xpNeededGauge.labels(labels).set((AL.Game.G.levels[bot.level + 1] ?? 0) - bot.xp);
   maxDamageGauge.labels(labels).set(bot.attack);
