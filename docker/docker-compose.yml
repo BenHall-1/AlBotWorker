@@ -1,10 +1,31 @@
 services:
-  mongo: 
+  mongo1: 
     image: mongo
     restart: always
+    container_name: mongo_1
     ports:
       - 27017:27017
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: password
-  
+    command: mongod --replSet albotReplicaSet --bind_ip localhost,mongo1
+  mongo2: 
+    image: mongo
+    restart: always
+    container_name: mongo_2
+    ports:
+      - 27018:27017
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: password
+    command: mongod --replSet albotReplicaSet --bind_ip localhost,mongo2
+  mongo3: 
+    image: mongo
+    restart: always
+    container_name: mongo_3
+    ports:
+      - 27019:27017
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: password
+    command: mongod --replSet albotReplicaSet --bind_ip localhost,mongo3

@@ -4,6 +4,7 @@ import {
 import { updateStats } from '../utils/prom.js';
 import logger from '../utils/logger.js';
 import { getBots } from '../managers/botManager.js';
+import { AddAttack } from '../managers/dbManager.js';
 
 export interface Bot {
   name: string;
@@ -120,6 +121,7 @@ export abstract class BotCharacter {
 
       const attack = await this.bot.basicAttack(targetEntity.id);
       logger.debug(`${this.bot.name} Attacked ${targetEntity.name}_${targetEntity.id} for ${attack.damage} damage`);
+      AddAttack(`${targetEntity.name}_${targetEntity.id}`, attack.damage ?? 0);
     } catch (e: any) {
       logger.error(e);
     }

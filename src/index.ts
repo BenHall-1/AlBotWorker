@@ -8,6 +8,7 @@ import handleParty from './utils/party.js';
 import { Bot } from './characters/character.js';
 import logger from './utils/logger.js';
 import { addBot, getBotByType, getBots } from './managers/botManager.js';
+import { batchCreate } from './managers/dbManager.js';
 
 const bots: Bot[] = [
   {
@@ -73,6 +74,11 @@ async function run() {
     // Deploy Potions
     setInterval(() => {
       deployPotions(merchant, nonMerchants);
+    }, 60000);
+
+    // Run Database Queries
+    setInterval(async () => {
+      await batchCreate();
     }, 60000);
   } catch (e) {
     logger.error(e);

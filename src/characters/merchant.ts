@@ -2,6 +2,7 @@ import AL, {
   Character, ItemName, Merchant, Tools,
 } from 'alclient';
 import { getBots } from '../managers/botManager.js';
+import { AddUpgrade } from '../managers/dbManager.js';
 import logger from '../utils/logger.js';
 import { BotCharacter, Bot } from './character.js';
 
@@ -252,11 +253,14 @@ export class MerchantBot extends BotCharacter {
 
           this.bot.massProduction().catch(() => {});
           this.bot.useMPPot(this.bot.locateItem('mpot0')).catch(() => {});
-          this.bot.upgrade(lowestItem, scrollPos).then((upgradeSuccessful) => {
+          const previousLevel = this.bot.items[lowestItem]?.level ?? 0;
+          this.bot.upgrade(lowestItem, scrollPos).then(async (upgradeSuccessful) => {
             if (upgradeSuccessful) {
               logger.info(`Upgraded ${item} to ${this.bot?.items[lowestItem]?.level ?? 'unknown'}`);
+              await AddUpgrade(item, previousLevel, this.bot?.items[lowestItem]?.level ?? 1, true);
             } else {
               logger.info(`Upgrade Failed (lost 1x ${item})`);
+              await AddUpgrade(item, previousLevel);
             }
 
             this.processUpgrade(item, iteration + 1);
