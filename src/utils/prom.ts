@@ -13,7 +13,7 @@ async function run() {
   const app = express();
 
   app.get('/health', async (req: any, res: any) => {
-    res.send('OK');
+    res.status(200).send('OK');
   });
 
   app.get('/metrics', async (req: any, res: any) => {
