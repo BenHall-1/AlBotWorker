@@ -30,7 +30,7 @@ async function run() {
   try {
     await runPrometheus();
 
-    await Promise.all([AL.Game.loginJSONFile('./credentials.json'), AL.Game.getGData()]);
+    await Promise.all([AL.Game.login(process.env.EMAIL, process.env.PASSWORD), AL.Game.getGData()]);
     await AL.Pathfinder.prepare(AL.Game.G);
 
     for (const bot of bots) {
