@@ -12,6 +12,10 @@ async function run() {
 
   const app = express();
 
+  app.get('/health', async (req: any, res: any) => {
+    res.send('OK');
+  });
+
   app.get('/metrics', async (req: any, res: any) => {
     res.set('Content-Type', register.contentType);
     res.end(await register.metrics());
