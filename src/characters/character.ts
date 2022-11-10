@@ -44,8 +44,8 @@ export abstract class BotCharacter {
     await this.clearLoops();
     await this.startLoops();
     this.bot.socket.on('disconnect', (reason) => {
-      logger.warn(`${this.botName} disconnected due to '${reason}', reconnecting...`);
-      this.startBot();
+      logger.warn(`${this.botName} disconnected due to '${reason}', reconnecting in 15 seconds...`);
+      setTimeout(() => this.startBot(), 15000);
     });
     return bot;
   }
