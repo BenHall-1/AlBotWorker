@@ -10,6 +10,12 @@ import logger from './utils/logger.js';
 import { addBot, getBotByType, getBots } from './managers/botManager.js';
 import { batchCreate } from './managers/dbManager.js';
 
+async function handleExit() {
+  logger.info('Exiting...');
+  await Promise.all(getBots().map((bot) => bot.disconnect()));
+  process.exit(0);
+}
+
 const bots: Bot[] = [
   {
     name: 'Iqium', type: 'merchant', region: 'EU', server: 'II',
@@ -86,6 +92,10 @@ async function run() {
   } catch (e) {
     logger.error(e);
   }
+
+  process.on('SIGINT', () => handleExit());
+  process.on('SIGQUIT', () => handleExit());
+  process.on('SIGTERM', () => handleExit());
 }
 
 await run();
