@@ -5,7 +5,7 @@ metadata:
   labels:
     app: adventureland
 spec:
-   selector:
+  selector:
     matchLabels:
       app: adventureland
   replicas: 1
@@ -45,7 +45,7 @@ spec:
               path: /kubernetes/liveliness
               port: 3000
               scheme: HTTP
-          redinessProbe:
+          readinessProbe:
             httpGet:
               path: /kubernetes/health
               port: 3000
