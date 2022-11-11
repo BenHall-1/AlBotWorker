@@ -91,6 +91,7 @@ async function run() {
     }, 60000);
   } catch (e) {
     logger.error(e);
+    process.exit(1);
   }
 
   process.on('SIGINT', () => handleExit());
