@@ -5,6 +5,9 @@ metadata:
   labels:
     app: adventureland
 spec:
+   selector:
+    matchLabels:
+      app: adventureland
   replicas: 1
   strategy:
     type: Recreate
