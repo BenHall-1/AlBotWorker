@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: adventureland-bot
+  labels:
+    app: adventureland
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: adventureland
+    spec:
+      containers:
+        - name: adventureland-bot
+          image: 'ghcr.io/benhall-1/albot:main'
+          imagePullPolicy: Always
+          ports:
+            - name: metrics-port
+              containerPort: 3000
+              protocol: TCP
+          env:
+            - name: PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  name: adventureland-cm
+                  key: PASSWORD
+            - name: EMAIL
+              valueFrom:
+                configMapKeyRef:
+                  name: adventureland-cm
+                  key: EMAIL
+            - name: DATABASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: adventureland-cm
+                  key: DATABASE_URL
+          livenessProbe:
+            httpGet:
+              path: /kubernetes/liveliness
+              port: 3000
+              scheme: HTTP
+          redinessProbe:
+            httpGet:
+              path: /kubernetes/health
+              port: 3000
+              scheme: HTTP
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - web
+                topologyKey: kubernetes.io/hostname

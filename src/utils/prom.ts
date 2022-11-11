@@ -2,6 +2,7 @@ import AL, { Character } from 'alclient';
 import client from 'prom-client';
 import express from 'express';
 import logger from './logger.js';
+import { getBots } from '../managers/botManager.js';
 
 const register = new client.Registry();
 
@@ -12,9 +13,15 @@ async function run() {
 
   const app = express();
 
-  app.get('/health', async (req: any, res: any) => {
+  app.get('/kubernetes/health', async (req: any, res: any) => {
+    if (getBots().length !== 4) {
+      res.status(500).send('Not all bots are connected');
+      return;
+    }
     res.status(200).send('OK');
   });
+
+  app.get('/kubernetes/liveliness', async (req: any, res: any) => res.status(200).send('OK'));
 
   app.get('/metrics', async (req: any, res: any) => {
     res.set('Content-Type', register.contentType);
