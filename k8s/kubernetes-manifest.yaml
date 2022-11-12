@@ -62,3 +62,17 @@ spec:
                       values:
                         - web
                 topologyKey: kubernetes.io/hostname
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: adventureland
+spec:
+  ports:
+    - port: 3000
+      protocol: TCP
+      targetPort: metrics-port
+  selector:
+    app: adventureland
+  sessionAffinity: None
+  type: LoadBalancer
