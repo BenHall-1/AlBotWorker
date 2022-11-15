@@ -1,24 +1,24 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: adventureland-bot
+  name: adventureland-worker
   labels:
-    app: adventureland
+    app: adventureland-worker
 spec:
   selector:
     matchLabels:
-      app: adventureland
+      app: adventureland-worker
   replicas: 1
   strategy:
     type: Recreate
   template:
     metadata:
       labels:
-        app: adventureland
+        app: adventureland-worker
     spec:
       containers:
         - name: adventureland-bot
-          image: 'ghcr.io/benhall-1/albot:main'
+          image: 'ghcr.io/benhall-1/albotworker:main'
           imagePullPolicy: Always
           ports:
             - name: metrics-port
@@ -28,17 +28,17 @@ spec:
             - name: PASSWORD
               valueFrom:
                 configMapKeyRef:
-                  name: adventureland-cm
+                  name: adventureland-worker-cm
                   key: PASSWORD
             - name: EMAIL
               valueFrom:
                 configMapKeyRef:
-                  name: adventureland-cm
+                  name: adventureland-worker-cm
                   key: EMAIL
             - name: DATABASE_URL
               valueFrom:
                 configMapKeyRef:
-                  name: adventureland-cm
+                  name: adventureland-worker-cm
                   key: DATABASE_URL
           livenessProbe:
             httpGet:
@@ -66,13 +66,13 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: adventureland
+  name: adventureland-worker
 spec:
   ports:
     - port: 3000
       protocol: TCP
       targetPort: metrics-port
   selector:
-    app: adventureland
+    app: adventureland-worker
   sessionAffinity: None
   type: LoadBalancer

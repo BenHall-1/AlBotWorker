@@ -10,7 +10,7 @@ export default createLogger({
     format.splat(),
     format.json(),
   ),
-  defaultMeta: { service: 'AlBot' },
+  defaultMeta: { service: 'adventureland-worker' },
   transports: [
     new transports.Console({
       format: format.combine(
