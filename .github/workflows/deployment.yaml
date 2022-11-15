@@ -6,7 +6,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: benhall-1/albot-worker
+  IMAGE_NAME: benhall-1/adventureland-worker
 
 jobs:
   build-and-push-image:
