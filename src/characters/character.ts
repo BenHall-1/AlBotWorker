@@ -109,11 +109,10 @@ export abstract class BotCharacter {
         }
       }
 
-      if (!targetEntity) {
-        if (!this.bot.smartMoving) {
-          await this.bot.smartMove(this.target);
-        }
-        return;
+      if (!targetEntity) return;
+
+      if (!this.bot.smartMoving) {
+        await this.bot.smartMove(this.target);
       }
 
       if (this.bot.mp < this.bot.mp_cost) {
@@ -133,7 +132,9 @@ export abstract class BotCharacter {
     if (!this.bot) return;
 
     if (this.bot.rip) {
+      try {
       await this.bot.respawn();
+      } catch(e) {}
     }
 
     if (!this.bot.ready) return;
