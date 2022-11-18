@@ -30,7 +30,7 @@ const bots: Bot[] = [
     name: 'Krudalf', type: 'priest', region: 'EU', server: 'II',
   },
 ];
-const targetMonster: MonsterName = 'goo';
+const targetMonster: MonsterName = 'squig';
 
 async function run() {
   try {

@@ -97,13 +97,13 @@ export abstract class BotCharacter {
       if (!this.target) return;
       if (this.bot.isOnCooldown('attack')) return;
 
-      // let targetEntity: Entity;
+      let targetEntity: Entity;
 
-      // if (this.bot.ctype !== 'warrior') {
-      // targetEntity = getBots({ include: ['warrior'] })[0]?.getTargetEntity();
-      // } else {
-      const targetEntity = this.bot.getEntity({ canWalkTo: true, type: this.target, withinRange: 'attack' });
-      // }
+      if (this.bot.ctype !== 'warrior') {
+        targetEntity = getBots({ include: ['warrior'] })[0]?.getTargetEntity();
+      } else {
+        targetEntity = this.bot.getEntity({ canWalkTo: true, type: this.target, withinRange: 'attack' });
+      }
 
       if (!targetEntity) {
         if (!this.bot.smartMoving) {
