@@ -102,7 +102,11 @@ export abstract class BotCharacter {
       if (this.bot.ctype !== 'warrior') {
         targetEntity = getBots({ include: ['warrior'] })[0]?.getTargetEntity();
       } else {
-        targetEntity = this.bot.getEntity({ canWalkTo: true, type: this.target, withinRange: 'attack' });
+        if (!this.bot.target || this.bot.getTargetEntity() === undefined) {
+          targetEntity = this.bot.getEntity({ canWalkTo: true, type: this.target, withinRange: 'attack' });
+        } else {
+          targetEntity = this.bot.getTargetEntity();
+        }
       }
 
       if (!targetEntity) {
@@ -111,8 +115,6 @@ export abstract class BotCharacter {
         }
         return;
       }
-
-      if (targetEntity === undefined) return;
 
       if (this.bot.mp < this.bot.mp_cost) {
         await this.regen_mp();
