@@ -7,7 +7,7 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 
 RUN --mount=type=secret,id=npmrc \
-  mv /run/secrets/npmrc $HOME/.npmrc 
+  cat /run/secrets/npmrc >> $HOME/.npmrc 
   
 RUN npm ci
 
@@ -26,7 +26,7 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 
 RUN --mount=type=secret,id=npmrc \
-  mv /run/secrets/npmrc $HOME/.npmrc 
+  cat /run/secrets/npmrc >> $HOME/.npmrc 
   
 RUN npm ci --production
 
