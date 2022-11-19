@@ -6,7 +6,7 @@ WORKDIR /usr/src/app
 # Install app dependencies
 COPY package*.json ./
 
-RUN --mount=type=ssh --mount=type=secret,id=npmrc,dst=$HOME/.npmrc \
+RUN --mount=type=secret,id=npmrc,dst=$HOME/.npmrc \
   npm ci
 
 COPY . .
@@ -21,8 +21,8 @@ WORKDIR /usr/src/app
 # Install app dependencies
 COPY package*.json ./
 
-RUN --mount=type=ssh --mount=type=secret,id=npmrc,dst=$HOME/.npmrc \
-  npm ci --production
+RUN --mount=type=secret,id=npmrc,dst=$HOME/.npmrc \
+  cat $HOME/.npmrc && npm ci --production
 
 COPY --from=builder /usr/src/app/out ./out
 
