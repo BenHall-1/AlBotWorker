@@ -22,7 +22,7 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 
 RUN --mount=type=secret,id=npmrc,dst=$HOME/.npmrc \
-  cat $HOME/.npmrc && npm ci --production
+  ls $HOME -alk && npm ci --production
 
 COPY --from=builder /usr/src/app/out ./out
 
