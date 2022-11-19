@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '@benhall-1/albotdb';
 import { ItemName } from 'alclient';
 
 const prisma = new PrismaClient();

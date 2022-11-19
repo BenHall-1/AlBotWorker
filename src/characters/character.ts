@@ -3,7 +3,7 @@ import {
 } from 'alclient';
 import { updateStats } from '../utils/prom.js';
 import logger from '../utils/logger.js';
-import { getBots } from '../managers/botManager.js';
+import { getBotByType } from '../managers/botManager.js';
 import * as db from '../managers/dbManager.js';
 
 export interface Bot {
@@ -100,13 +100,11 @@ export abstract class BotCharacter {
       let targetEntity: Entity;
 
       if (this.bot.ctype !== 'warrior') {
-        targetEntity = getBots({ include: ['warrior'] })[0]?.getTargetEntity();
+        targetEntity = getBotByType('warrior')?.getTargetEntity();
+      } else if (!this.bot.target || this.bot.getTargetEntity() === undefined) {
+        targetEntity = this.bot.getEntity({ canWalkTo: true, type: this.target, withinRange: 'attack' });
       } else {
-        if (!this.bot.target || this.bot.getTargetEntity() === undefined) {
-          targetEntity = this.bot.getEntity({ canWalkTo: true, type: this.target, withinRange: 'attack' });
-        } else {
-          targetEntity = this.bot.getTargetEntity();
-        }
+        targetEntity = this.bot.getTargetEntity();
       }
 
       if (!targetEntity) return;
@@ -133,8 +131,10 @@ export abstract class BotCharacter {
 
     if (this.bot.rip) {
       try {
-      await this.bot.respawn();
-      } catch(e) {}
+        await this.bot.respawn();
+      } catch (e) {
+        logger.error(e);
+      }
     }
 
     if (!this.bot.ready) return;

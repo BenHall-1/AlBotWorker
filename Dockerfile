@@ -6,7 +6,8 @@ WORKDIR /usr/src/app
 # Install app dependencies
 COPY package*.json ./
 
-RUN npm ci
+RUN --mount=type=ssh --mount=type=secret,id=npmrc,dst=$HOME/.npmrc \
+  npm ci
 
 COPY . .
 
@@ -20,11 +21,8 @@ WORKDIR /usr/src/app
 # Install app dependencies
 COPY package*.json ./
 
-COPY prisma ./prisma/
-
-RUN npm ci --production
-
-RUN npx prisma generate
+RUN --mount=type=ssh --mount=type=secret,id=npmrc,dst=$HOME/.npmrc \
+  npm ci --production
 
 COPY --from=builder /usr/src/app/out ./out
 
