@@ -6,8 +6,12 @@ WORKDIR /usr/src/app
 # Install app dependencies
 COPY package*.json ./
 
-RUN --mount=type=secret,id=npmrc,dst=$HOME/.npmrc \
-  npm ci
+RUN --mount=type=secret,id=npmrc \
+  mv /run/secrets/npmrc $HOME/.npmrc 
+  
+RUN npm ci
+
+RUN rm $HOME/.npmrc
 
 COPY . .
 
