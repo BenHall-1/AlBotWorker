@@ -21,8 +21,8 @@ WORKDIR /usr/src/app
 # Install app dependencies
 COPY package*.json ./
 
-RUN --mount=type=secret,id=npmrc,dst=$HOME/.npmrc \
-  ls $HOME -alk && npm ci --production
+RUN --mount=type=secret,id=npmrc \
+  cat /run/secrets/npmrc && npm ci --production
 
 COPY --from=builder /usr/src/app/out ./out
 
