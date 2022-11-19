@@ -23,7 +23,7 @@ export default class WarriorBot extends BotCharacter {
 
     const warrior: Warrior = this.bot as Warrior;
 
-    const { target } = this.bot;
+    const target = this.bot.target;
     if (!target) return;
 
     if (this.bot.isOnCooldown('taunt')) return;

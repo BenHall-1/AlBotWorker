@@ -1,0 +1,34 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model ItemUpgrades {
+  id             String @id @default(auto()) @map("_id") @db.ObjectId
+  item_name      String
+  previous_level Int
+  new_level      Int
+  successful     Boolean
+  date           DateTime
+}
+
+model MonsterAttacks {
+  id     String @id @default(auto()) @map("_id") @db.ObjectId
+  entity String
+  damage Int
+  date   DateTime
+}
+
+model SoldItems {
+  id     String @id @default(auto()) @map("_id") @db.ObjectId
+  item   String
+  gold   Int
+  date   DateTime
+}

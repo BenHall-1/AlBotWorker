@@ -6,12 +6,7 @@ WORKDIR /usr/src/app
 # Install app dependencies
 COPY package*.json ./
 
-RUN --mount=type=secret,id=npmrc \
-  cat /run/secrets/npmrc >> .npmrc 
-  
 RUN npm ci
-
-RUN rm .npmrc
 
 COPY . .
 
@@ -25,14 +20,11 @@ WORKDIR /usr/src/app
 # Install app dependencies
 COPY package*.json ./
 
-RUN --mount=type=secret,id=npmrc \
-  cat /run/secrets/npmrc >> .npmrc 
-  
-RUN cat .npmrc
+COPY prisma ./prisma/
 
 RUN npm ci --production
 
-RUN rm .npmrc
+RUN npx prisma generate
 
 COPY --from=builder /usr/src/app/out ./out
 
