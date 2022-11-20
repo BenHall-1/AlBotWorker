@@ -1,4 +1,4 @@
-name: Create and publish a Docker image
+name: Deploy AdventureLand Bot
 
 on:
   push:
@@ -9,7 +9,8 @@ env:
   IMAGE_NAME: benhall-1/adventureland-worker
 
 jobs:
-  build-and-push-image:
+  build:
+    name: Build & Deploy
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -25,17 +26,23 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Auth NPM GPR
+        uses: jgierer12/npm-auth-gpr@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-
       - name: Build and push Docker image
-        uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
+        uses: docker/build-push-action@v3
         with:
           context: .
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          secret-files: |
+            "npmrc=.npmrc"
