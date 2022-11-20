@@ -1,7 +1,8 @@
-import { PrismaClient } from '@prisma/client';
+import { createContext } from '@benhall-1/albotdb';
 import { ItemName } from 'alclient';
 
-const prisma = new PrismaClient();
+const prismaContext = await createContext({});
+const { prisma } = prismaContext;
 
 type ItemUpgrade = {
   item_name: string;

@@ -28,6 +28,7 @@
   },
   "homepage": "https://github.com/BenHall-1/AlBot#readme",
   "dependencies": {
+    "@benhall-1/albotdb": "^0.0.4",
     "@prisma/client": "^4.5.0",
     "alclient": "^0.15.52",
     "express": "^4.18.2",
