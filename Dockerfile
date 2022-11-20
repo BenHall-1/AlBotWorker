@@ -28,7 +28,7 @@ COPY package*.json ./
 RUN --mount=type=secret,id=npmrc \
   cat /run/secrets/npmrc >> .npmrc 
 
-RUN npm ci --production
+RUN npm ci
 
 RUN rm .npmrc
 
