@@ -101,10 +101,12 @@ export abstract class BotCharacter {
 
       if (this.bot.ctype !== 'warrior') {
         targetEntity = getBots({ include: ['warrior'] })[0]?.getTargetEntity();
-      } else if (!this.bot.target || this.bot.getTargetEntity() === undefined) {
-        targetEntity = this.bot.getEntity({ canWalkTo: true, type: this.target, withinRange: 'attack' });
       } else {
-        targetEntity = this.bot.getTargetEntity();
+        if (!this.bot.target || this.bot.getTargetEntity() === undefined) {
+          targetEntity = this.bot.getEntity({ canWalkTo: true, type: this.target, withinRange: 'attack' });
+        } else {
+          targetEntity = this.bot.getTargetEntity();
+        }
       }
 
       if (!targetEntity) return;
@@ -131,10 +133,8 @@ export abstract class BotCharacter {
 
     if (this.bot.rip) {
       try {
-        await this.bot.respawn();
-      } catch (e) {
-        logger.error(e);
-      }
+      await this.bot.respawn();
+      } catch(e) {}
     }
 
     if (!this.bot.ready) return;
