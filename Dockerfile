@@ -30,6 +30,8 @@ RUN --mount=type=secret,id=npmrc \
 
 RUN npm ci
 
+RUN npx prisma generate
+
 RUN rm .npmrc
 
 COPY --from=builder /usr/src/app/out ./out
